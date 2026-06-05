@@ -9,6 +9,7 @@ import {
 } from "@/lib/gw2/bosses";
 import { usePersistentState } from "@/lib/usePersistentState";
 import IconRail from "@/components/IconRail";
+import { Icon, P } from "@/components/icons";
 import {
   fireSpawnAlert,
   requestNotifyPermission,
@@ -20,18 +21,16 @@ import {
 const Gw2Map = dynamic(() => import("@/components/Gw2Map"), {
   ssr: false,
   loading: () => (
-    <div className="grid h-full w-full place-items-center text-white/40">
-      Loading map…
-    </div>
+    <div className="grid h-full w-full place-items-center text-white/40">Loading map…</div>
   ),
 });
 
 type CategoryKey = "active" | "standard" | "hardcore";
 
-const CATEGORY: Record<CategoryKey, { label: string; dot: string }> = {
-  active: { label: "Active Now", dot: "bg-green-400" },
-  standard: { label: "Standard Bosses", dot: "bg-amber-400" },
-  hardcore: { label: "Hardcore Bosses", dot: "bg-purple-400" },
+const CATEGORY: Record<CategoryKey, { label: string; short: string; dot: string }> = {
+  active: { label: "Active Now", short: "Active", dot: "bg-green-400" },
+  standard: { label: "Standard Bosses", short: "Standard", dot: "bg-amber-400" },
+  hardcore: { label: "Hardcore Bosses", short: "Hardcore", dot: "bg-purple-400" },
 };
 
 function categoryOf(s: BossStatus): CategoryKey {
@@ -48,39 +47,6 @@ function useNow(intervalMs = 1000) {
   return now;
 }
 
-/* --------------------------------- icons --------------------------------- */
-
-function Icon({ path, className = "h-5 w-5", fill = "none" }: { path: string; className?: string; fill?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill={fill}
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d={path} />
-    </svg>
-  );
-}
-const P = {
-  bolt: "M13 2 4 14h7l-1 8 9-12h-7z",
-  home: "M3 11l9-8 9 8M5 10v10h14V10",
-  list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
-  map: "M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15",
-  bell: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0",
-  info: "M12 16v-4M12 8h.01M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z",
-  search: "M21 21l-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z",
-  eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
-  eyeOff: "M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 4.2A10.9 10.9 0 0 1 12 4c6.5 0 10 7 10 7a18 18 0 0 1-3.1 4M6.1 6.1A18 18 0 0 0 2 11s3.5 7 10 7a10.9 10.9 0 0 0 3.1-.5",
-  chevron: "M6 9l6 6 6-6",
-  pin: "M12 21s7-6.6 7-12a7 7 0 1 0-14 0c0 5.4 7 12 7 12zM12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
-  star: "M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.8L12 17.3 5.8 20.8l1.6-6.8L2.2 8.9l6.9-.6z",
-  close: "M18 6 6 18M6 6l12 12",
-};
-
 type NotifSettings = { enabled: boolean; lead: number; sound: boolean };
 
 /* ------------------------------- boss row -------------------------------- */
@@ -88,14 +54,12 @@ type NotifSettings = { enabled: boolean; lead: number; sound: boolean };
 function BossRow({
   status,
   selected,
-  dimmed,
   favorite,
   onSelect,
   onToggleFavorite,
 }: {
   status: BossStatus;
   selected: boolean;
-  dimmed: boolean;
   favorite: boolean;
   onSelect: () => void;
   onToggleFavorite: () => void;
@@ -108,7 +72,6 @@ function BossRow({
       className={[
         "group flex w-full items-center gap-2 rounded-md border px-2 py-2 transition",
         selected ? "border-orange-400/60 bg-orange-400/10" : "border-transparent hover:bg-white/5",
-        dimmed ? "opacity-40" : "",
       ].join(" ")}
     >
       <button
@@ -152,71 +115,6 @@ function BossRow({
   );
 }
 
-/* ------------------------------ category group ---------------------------- */
-
-function Group({
-  cat,
-  items,
-  visible,
-  collapsed,
-  selectedId,
-  favorites,
-  onToggleVisible,
-  onToggleCollapsed,
-  onSelect,
-  onToggleFavorite,
-}: {
-  cat: CategoryKey;
-  items: BossStatus[];
-  visible: boolean;
-  collapsed: boolean;
-  selectedId: string;
-  favorites: Set<string>;
-  onToggleVisible: () => void;
-  onToggleCollapsed: () => void;
-  onSelect: (id: string) => void;
-  onToggleFavorite: (id: string) => void;
-}) {
-  const meta = CATEGORY[cat];
-  if (items.length === 0) return null;
-
-  // Favorites float to the top of the group (otherwise keep time order).
-  const sorted = [...items].sort(
-    (a, b) => Number(favorites.has(b.boss.id)) - Number(favorites.has(a.boss.id)),
-  );
-
-  return (
-    <div className="border-b border-white/5 pb-2">
-      <div className="flex items-center gap-2 px-1 py-2">
-        <button onClick={onToggleCollapsed} className="text-white/40 transition hover:text-white" aria-label="Collapse">
-          <Icon path={P.chevron} className={`h-4 w-4 transition ${collapsed ? "-rotate-90" : ""}`} />
-        </button>
-        <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-        <span className="flex-1 text-xs font-semibold uppercase tracking-wide text-white/70">{meta.label}</span>
-        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-white/70">{items.length}</span>
-        <button onClick={onToggleVisible} className="text-white/40 transition hover:text-white" aria-label="Toggle visibility">
-          <Icon path={visible ? P.eye : P.eyeOff} className="h-4 w-4" />
-        </button>
-      </div>
-      {!collapsed && (
-        <div className="flex flex-col gap-0.5">
-          {sorted.map((s) => (
-            <BossRow
-              key={s.boss.id}
-              status={s}
-              selected={s.boss.id === selectedId}
-              dimmed={!visible}
-              favorite={favorites.has(s.boss.id)}
-              onSelect={() => onSelect(s.boss.id)}
-              onToggleFavorite={() => onToggleFavorite(s.boss.id)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* --------------------------------- shell --------------------------------- */
 
 export default function MapMasterApp() {
@@ -232,11 +130,6 @@ export default function MapMasterApp() {
     active: true,
     standard: true,
     hardcore: true,
-  });
-  const [collapsed, setCollapsed] = usePersistentState<Record<CategoryKey, boolean>>("gw2mm:collapsed", {
-    active: false,
-    standard: false,
-    hardcore: false,
   });
   const [notif, setNotif] = usePersistentState<NotifSettings>("gw2mm:notif", {
     enabled: false,
@@ -265,7 +158,6 @@ export default function MapMasterApp() {
         fireSpawnAlert(s, notif.sound);
       }
     }
-    // Keep the fired-set from growing without bound.
     if (firedRef.current.size > 100) firedRef.current.clear();
   }, [statuses, notif, favorites]);
 
@@ -285,21 +177,24 @@ export default function MapMasterApp() {
     s.boss.zone.toLowerCase().includes(q) ||
     s.boss.area.toLowerCase().includes(q);
 
-  const filtered = statuses
+  // One flat list, always in chronological order (active first, then soonest
+  // spawn) — getBossStatuses already sorts this way. We do NOT regroup by type.
+  const listStatuses = statuses
     .filter(matches)
-    .filter((s) => !favOnly || favorites.has(s.boss.id));
+    .filter((s) => !favOnly || favorites.has(s.boss.id))
+    .filter((s) => visible[categoryOf(s)]);
 
-  const groups: Record<CategoryKey, BossStatus[]> = {
-    active: filtered.filter((s) => categoryOf(s) === "active"),
-    standard: filtered.filter((s) => categoryOf(s) === "standard"),
-    hardcore: filtered.filter((s) => categoryOf(s) === "hardcore"),
+  const mapStatuses = listStatuses;
+  const selected =
+    mapStatuses.find((s) => s.boss.id === selectedId) ?? mapStatuses[0]; // may be undefined
+
+  const catCounts: Record<CategoryKey, number> = {
+    active: statuses.filter((s) => categoryOf(s) === "active").length,
+    standard: statuses.filter((s) => categoryOf(s) === "standard").length,
+    hardcore: statuses.filter((s) => categoryOf(s) === "hardcore").length,
   };
 
-  const mapStatuses = filtered.filter((s) => visible[categoryOf(s)]);
-  const selected =
-    mapStatuses.find((s) => s.boss.id === selectedId) ?? mapStatuses[0] ?? statuses[0];
-
-  const activeCount = statuses.filter((s) => s.active).length;
+  const activeCount = catCounts.active;
   const upcoming = statuses.find((s) => !s.active);
   const utc = now.toLocaleTimeString([], {
     hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC",
@@ -445,7 +340,7 @@ export default function MapMasterApp() {
             <div>
               <h1 className="text-sm font-bold text-white">Tyria World Bosses</h1>
               <p className="text-[11px] text-white/45">
-                Times shown in your local zone ({tz})
+                Sorted by next spawn · times in your local zone ({tz})
               </p>
             </div>
 
@@ -474,6 +369,31 @@ export default function MapMasterApp() {
               </button>
             </div>
 
+            {/* category filter pills (control list + map markers) */}
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(CATEGORY) as CategoryKey[]).map((cat) => {
+                const on = visible[cat];
+                const meta = CATEGORY[cat];
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setVisible((v) => ({ ...v, [cat]: !v[cat] }))}
+                    className={[
+                      "flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs font-medium transition",
+                      on
+                        ? "border-white/15 bg-white/10 text-white"
+                        : "border-white/10 bg-transparent text-white/35",
+                    ].join(" ")}
+                    title={`${on ? "Hide" : "Show"} ${meta.label}`}
+                  >
+                    <span className={`h-2 w-2 rounded-full ${meta.dot} ${on ? "" : "opacity-40"}`} />
+                    {meta.short}
+                    <span className="text-white/40">{catCounts[cat]}</span>
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setAll(true)}
@@ -491,24 +411,25 @@ export default function MapMasterApp() {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
-            {(Object.keys(groups) as CategoryKey[]).map((cat) => (
-              <Group
-                key={cat}
-                cat={cat}
-                items={groups[cat]}
-                visible={visible[cat]}
-                collapsed={collapsed[cat]}
-                selectedId={selected?.boss.id ?? ""}
-                favorites={favorites}
-                onToggleVisible={() => setVisible((v) => ({ ...v, [cat]: !v[cat] }))}
-                onToggleCollapsed={() => setCollapsed((c) => ({ ...c, [cat]: !c[cat] }))}
-                onSelect={setSelectedId}
-                onToggleFavorite={toggleFavorite}
-              />
-            ))}
-            {filtered.length === 0 && (
+            <div className="flex flex-col gap-0.5">
+              {listStatuses.map((s) => (
+                <BossRow
+                  key={s.boss.id}
+                  status={s}
+                  selected={s.boss.id === selected?.boss.id}
+                  favorite={favorites.has(s.boss.id)}
+                  onSelect={() => setSelectedId(s.boss.id)}
+                  onToggleFavorite={() => toggleFavorite(s.boss.id)}
+                />
+              ))}
+            </div>
+            {listStatuses.length === 0 && (
               <p className="px-3 py-6 text-center text-sm text-white/40">
-                {favOnly ? "No favorites yet — tap ☆ on a boss to add one." : `No bosses match “${query}”.`}
+                {favOnly
+                  ? "No favorites match — tap ☆ on a boss to add one."
+                  : query
+                    ? `No bosses match “${query}”.`
+                    : "All categories hidden — enable one above."}
               </p>
             )}
           </div>
@@ -520,7 +441,7 @@ export default function MapMasterApp() {
             <Gw2Map statuses={mapStatuses} selectedId={selected.boss.id} onSelect={setSelectedId} />
           ) : (
             <div className="grid h-full place-items-center text-white/40">
-              No markers visible — enable a category.
+              No bosses to show — enable a category or clear the search.
             </div>
           )}
 

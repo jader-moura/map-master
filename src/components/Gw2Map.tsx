@@ -31,13 +31,14 @@ export default function Gw2Map({
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
-  const selected =
-    statuses.find((s) => s.boss.id === selectedId) ?? statuses[0];
+  const selected = statuses.find((s) => s.boss.id === selectedId) ?? statuses[0];
+  // Fall back to central Tyria when there are no visible markers.
+  const center = selected ? unproject(selected.boss.coord) : unproject([49404, 31170]);
 
   return (
     <MapContainer
       crs={CRS.Simple}
-      center={unproject(selected.boss.coord)}
+      center={center}
       zoom={4}
       minZoom={2}
       maxZoom={MAX_ZOOM}
@@ -46,7 +47,7 @@ export default function Gw2Map({
     >
       <TileLayer url={TILE_URL} noWrap minZoom={1} maxZoom={MAX_ZOOM} />
       {statuses.map((s) => {
-        const isSelected = s.boss.id === selected.boss.id;
+        const isSelected = s.boss.id === selected?.boss.id;
         const color = s.active ? "#22c55e" : s.boss.hardcore ? "#a855f7" : "#f59e0b";
         return (
           <CircleMarker
@@ -69,7 +70,7 @@ export default function Gw2Map({
           </CircleMarker>
         );
       })}
-      <Recenter coord={selected.boss.coord} />
+      {selected && <Recenter coord={selected.boss.coord} />}
     </MapContainer>
   );
 }
