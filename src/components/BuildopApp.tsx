@@ -39,8 +39,11 @@ function categoryOf(s: BossStatus): CategoryKey {
 }
 
 function useNow(intervalMs = 1000) {
-  const [now, setNow] = useState<Date>(() => new Date());
+  // Starts null so the server render and the first client render match (no
+  // time-based hydration mismatch); the live clock begins after mount.
+  const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), intervalMs);
     return () => clearInterval(id);
   }, [intervalMs]);
@@ -49,18 +52,23 @@ function useNow(intervalMs = 1000) {
 
 type NotifSettings = { enabled: boolean; lead: number; sound: boolean };
 
+// Fixed reference time used before mount, so pre-hydration output is deterministic.
+const EPOCH = new Date(0);
+
 /* ------------------------------- boss row -------------------------------- */
 
 function BossRow({
   status,
   selected,
   favorite,
+  ready,
   onSelect,
   onToggleFavorite,
 }: {
   status: BossStatus;
   selected: boolean;
   favorite: boolean;
+  ready: boolean;
   onSelect: () => void;
   onToggleFavorite: () => void;
 }) {
@@ -86,7 +94,7 @@ function BossRow({
         <span
           className={[
             "h-2 w-2 shrink-0 rounded-full",
-            active ? "animate-pulse bg-green-400" : boss.hardcore ? "bg-purple-400" : "bg-amber-400",
+            ready && active ? "animate-pulse bg-green-400" : boss.hardcore ? "bg-purple-400" : "bg-amber-400",
           ].join(" ")}
         />
         <span className="min-w-0 flex-1">
@@ -96,7 +104,9 @@ function BossRow({
           </span>
         </span>
         <span className="shrink-0 text-right">
-          {active ? (
+          {!ready ? (
+            <span className="block font-mono text-xs font-semibold text-white/25">·····</span>
+          ) : active ? (
             <>
               <span className="block text-xs font-semibold text-green-400">Active</span>
               <span className="block text-[11px] text-white/45">{formatCountdown(msActiveLeft)}</span>
@@ -119,7 +129,11 @@ function BossRow({
 
 export default function BuildopApp() {
   const now = useNow();
-  const statuses = useMemo(() => getBossStatuses(now), [now]);
+  const ready = now !== null;
+  // Concrete Date for time math; before mount we use a fixed epoch so server
+  // and first client render are identical (live values appear after mount).
+  const clock = now ?? EPOCH;
+  const statuses = useMemo(() => getBossStatuses(clock), [clock]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -198,10 +212,12 @@ export default function BuildopApp() {
 
   const activeCount = catCounts.active;
   const upcoming = statuses.find((s) => !s.active);
-  const utc = now.toLocaleTimeString([], {
-    hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC",
-  });
-  const local = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const utc = now
+    ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" })
+    : "--:--:--";
+  const local = now
+    ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "--:--";
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const setAll = (v: boolean) => setVisible({ active: v, standard: v, hardcore: v });
@@ -212,7 +228,7 @@ export default function BuildopApp() {
         .map((t) => {
           const [h, m] = t.split(":").map(Number);
           const d = new Date(
-            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), h, m),
+            Date.UTC(clock.getUTCFullYear(), clock.getUTCMonth(), clock.getUTCDate(), h, m),
           );
           return {
             utc: t,
@@ -243,7 +259,7 @@ export default function BuildopApp() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          {upcoming && (
+          {ready && upcoming && (
             <div className="hidden items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 md:flex">
               <span className="text-xs text-white/50">Next</span>
               <span className="text-xs font-medium text-white">{upcoming.boss.name}</span>
@@ -254,7 +270,7 @@ export default function BuildopApp() {
           )}
           <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">
             <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            <span className="text-xs font-semibold text-white">{activeCount} active</span>
+            <span className="text-xs font-semibold text-white">{ready ? activeCount : "—"} active</span>
           </div>
           <div className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-right font-mono text-xs text-white/70 sm:block">
             <span className="text-white">{local}</span>
@@ -362,7 +378,7 @@ export default function BuildopApp() {
         <aside className="flex w-[340px] shrink-0 flex-col border-r border-white/10 bg-[#0b0b11]">
           <div className="shrink-0 space-y-3 p-3">
             <div>
-              <h1 className="text-sm font-bold text-white">Tyria World Bosses</h1>
+              <h1 className="text-sm font-bold text-white">GW2 World Boss Timer</h1>
               <p className="text-[11px] text-white/45">
                 Sorted by next spawn · times in your local zone ({tz})
               </p>
@@ -442,6 +458,7 @@ export default function BuildopApp() {
                   status={s}
                   selected={s.boss.id === selected?.boss.id}
                   favorite={favorites.has(s.boss.id)}
+                  ready={ready}
                   onSelect={() => setSelectedId(s.boss.id)}
                   onToggleFavorite={() => toggleFavorite(s.boss.id)}
                 />
@@ -574,7 +591,7 @@ export default function BuildopApp() {
                   <div className="flex flex-wrap gap-1">
                     {schedule.map((c) => {
                       const isNext = c.utc === selNextUTC;
-                      const isPast = !isNext && c.ms + durationMs <= now.getTime();
+                      const isPast = !isNext && c.ms + durationMs <= clock.getTime();
                       return (
                         <span
                           key={c.utc}

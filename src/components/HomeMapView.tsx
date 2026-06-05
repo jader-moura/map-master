@@ -86,9 +86,9 @@ export default function HomeMapView() {
         <aside className="flex w-[300px] shrink-0 flex-col border-r border-white/10 bg-[#0b0b11]">
           <div className="shrink-0 space-y-3 p-3">
             <div>
-              <h1 className="text-sm font-bold text-white">Tyria World Map</h1>
+              <h1 className="text-sm font-bold text-white">Guild Wars 2 Map</h1>
               <p className="text-[11px] text-white/45">
-                Waypoints, vistas, hearts &amp; more — toggle layers below
+                Tyria waypoints, vistas, hearts &amp; more — toggle layers below
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-2">
