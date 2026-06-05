@@ -117,21 +117,21 @@ function BossRow({
 
 /* --------------------------------- shell --------------------------------- */
 
-export default function MapMasterApp() {
+export default function BuildopApp() {
   const now = useNow();
   const statuses = useMemo(() => getBossStatuses(now), [now]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
-  const [favList, setFavList] = usePersistentState<string[]>("gw2mm:favorites", []);
-  const [favOnly, setFavOnly] = usePersistentState<boolean>("gw2mm:favOnly", false);
-  const [visible, setVisible] = usePersistentState<Record<CategoryKey, boolean>>("gw2mm:visible", {
+  const [favList, setFavList] = usePersistentState<string[]>("buildop:favorites", []);
+  const [favOnly, setFavOnly] = usePersistentState<boolean>("buildop:favOnly", false);
+  const [visible, setVisible] = usePersistentState<Record<CategoryKey, boolean>>("buildop:visible", {
     active: true,
     standard: true,
     hardcore: true,
   });
-  const [notif, setNotif] = usePersistentState<NotifSettings>("gw2mm:notif", {
+  const [notif, setNotif] = usePersistentState<NotifSettings>("buildop:notif", {
     enabled: false,
     lead: 5,
     sound: true,
@@ -236,7 +236,7 @@ export default function MapMasterApp() {
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 text-black">
             <Icon path={P.bolt} className="h-5 w-5" />
           </span>
-          <span className="text-base font-bold tracking-tight">GW2 MapMaster</span>
+          <span className="text-base font-bold tracking-tight">buildop</span>
           <span className="ml-1 hidden rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/60 sm:inline">
             Guild Wars 2
           </span>

@@ -37,7 +37,7 @@ export default function HomeMapView() {
   });
 
   const [visible, setVisible] = usePersistentState<Record<PoiKind, boolean>>(
-    "gw2mm:poiVisible",
+    "buildop:poiVisible",
     DEFAULT_VISIBLE,
   );
   const [query, setQuery] = useState("");
@@ -64,7 +64,7 @@ export default function HomeMapView() {
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 text-black">
             <Icon path={P.bolt} className="h-5 w-5" />
           </span>
-          <span className="text-base font-bold tracking-tight">GW2 MapMaster</span>
+          <span className="text-base font-bold tracking-tight">buildop</span>
           <span className="ml-1 hidden rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/60 sm:inline">
             Tyria Map
           </span>

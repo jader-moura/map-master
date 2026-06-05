@@ -21,7 +21,7 @@ export async function gw2Fetch<T>(
   if (lang) url.searchParams.set("lang", lang);
 
   const res = await fetch(url, {
-    headers: { "User-Agent": "gw2-map MapMaster" },
+    headers: { "User-Agent": "buildop (buildop.app)" },
     next: { revalidate },
   });
 

@@ -1,5 +1,5 @@
-import MapMasterApp from "@/components/MapMasterApp";
+import BuildopApp from "@/components/BuildopApp";
 
 export default function BossesPage() {
-  return <MapMasterApp />;
+  return <BuildopApp />;
 }

@@ -20,7 +20,7 @@ type RawFloor = { regions: Record<string, { maps: Record<string, RawMap> }> };
 const getPois = unstable_cache(
   async (): Promise<PoiData> => {
     const res = await fetch(FLOOR_URL, {
-      headers: { "User-Agent": "gw2-map MapMaster" },
+      headers: { "User-Agent": "buildop (buildop.app)" },
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`floor fetch failed: ${res.status}`);

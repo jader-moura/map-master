@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GW2 MapMaster — World Boss Timer",
+  title: "buildop — GW2 World Boss Timer & Map",
   description:
-    "Live Guild Wars 2 world boss timers with in-game map locations, built on the official GW2 API.",
+    "buildop: live Guild Wars 2 world boss timers and an interactive Tyria map (waypoints, vistas, hearts, hero challenges & portals), built on the official GW2 API.",
 };
 
 export default function RootLayout({

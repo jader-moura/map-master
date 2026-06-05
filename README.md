@@ -1,9 +1,9 @@
-# GW2 MapMaster — World Boss Timer
+# buildop
 
-A companion app for **Guild Wars 2**, built on the official
-[GW2 API](https://wiki.guildwars2.com/wiki/API:Main). The first feature is a
-**live world boss timer** with each boss's in-game location shown on the
-official GW2 map.
+A **Guild Wars 2** companion app (buildop.app), built on the official
+[GW2 API](https://wiki.guildwars2.com/wiki/API:Main). It pairs a **live world
+boss timer** with an interactive Tyria map showing each boss's in-game location
+plus waypoints, vistas, renown hearts, hero challenges and portals.
 
 ## Features
 
@@ -38,7 +38,7 @@ npm run start    # serve the build
 | `src/lib/gw2/bosses.ts` | Boss schedule data (UTC times, zones, in-game coords) + the `getBossStatuses()` logic that computes active/upcoming spawns. |
 | `src/lib/gw2/api.ts` | Cached wrapper around the GW2 API (`gw2Fetch`, `getPrices`, `getItems`). |
 | `src/app/api/prices/route.ts` | Example cached proxy endpoint. |
-| `src/components/MapMasterApp.tsx` | Client UI: ticking timer list + map state. |
+| `src/components/BuildopApp.tsx` | Boss-timer view: ticking list + map state. |
 | `src/components/Gw2Map.tsx` | Leaflet map using the Tyria continent tiling. |
 
 The boss schedule was generated from the [GW2 Wiki](https://wiki.guildwars2.com/wiki/World_boss)
