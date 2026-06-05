@@ -466,7 +466,7 @@ export default function BuildopApp() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+          <div className="scroll-themed min-h-0 flex-1 overflow-y-auto px-2 pb-4">
             <div className="flex flex-col gap-0.5">
               {filtered.map((i) => (
                 <Row
@@ -536,7 +536,7 @@ export default function BuildopApp() {
                 </button>
               </div>
 
-              <div className="space-y-3 overflow-y-auto p-3">
+              <div className="scroll-themed space-y-3 overflow-y-auto p-3">
                 {selected.kind === "boss" ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
