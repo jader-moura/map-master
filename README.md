@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GW2 MapMaster — World Boss Timer
 
-## Getting Started
+A companion app for **Guild Wars 2**, built on the official
+[GW2 API](https://wiki.guildwars2.com/wiki/API:Main). The first feature is a
+**live world boss timer** with each boss's in-game location shown on the
+official GW2 map.
 
-First, run the development server:
+## Features
+
+- ⏱️ **Live timers** — every world boss, sorted by "active now" then soonest
+  spawn, ticking every second against the current UTC time.
+- 🗺️ **Official GW2 map** — Leaflet map served from `tiles.guildwars2.com`,
+  auto-centred on the selected boss. Markers are colour-coded (green = active,
+  amber = standard, purple = hardcore).
+- 🔌 **Cached API layer** — `/api/prices` proxies the Trading Post through
+  Next.js fetch caching so the browser never hits the ~600 req/min rate limit.
+
+## Tech stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS v4**
+- **TanStack Query** (client-side data caching, wired up in `QueryProvider`)
+- **Leaflet** + **react-leaflet** (map, loaded client-only via `next/dynamic`)
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
+npm run start    # serve the build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## How it works
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Path | Purpose |
+| --- | --- |
+| `src/lib/gw2/bosses.ts` | Boss schedule data (UTC times, zones, in-game coords) + the `getBossStatuses()` logic that computes active/upcoming spawns. |
+| `src/lib/gw2/api.ts` | Cached wrapper around the GW2 API (`gw2Fetch`, `getPrices`, `getItems`). |
+| `src/app/api/prices/route.ts` | Example cached proxy endpoint. |
+| `src/components/MapMasterApp.tsx` | Client UI: ticking timer list + map state. |
+| `src/components/Gw2Map.tsx` | Leaflet map using the Tyria continent tiling. |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The boss schedule was generated from the [GW2 Wiki](https://wiki.guildwars2.com/wiki/World_boss)
+and the coordinates from `https://api.guildwars2.com/v2/maps`. To refresh it,
+re-scrape the wiki table and the maps API.
 
-## Learn More
+## Roadmap ideas
 
-To learn more about Next.js, take a look at the following resources:
+- Trading Post tracker page (the `/api/prices` proxy + `getItems` are ready).
+- Item / recipe database with crafting trees.
+- Browser notifications a few minutes before a chosen boss spawns.
+- Meta-event timers (Dragon's Stand, Drizzlewood, etc.) beyond core world bosses.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Fan project. Guild Wars 2 and all related assets are © ArenaNet, LLC.
