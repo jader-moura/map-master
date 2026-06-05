@@ -54,7 +54,7 @@ export default function Gw2Map({
       zoom={4}
       minZoom={2}
       maxZoom={MAX_ZOOM}
-      className="h-[480px] w-full rounded-xl border border-white/10"
+      className="h-full min-h-[360px] w-full"
       // Tyria is square; constrain panning to the continent bounds.
       maxBounds={latLngBounds(unproject([0, 0]), unproject(CONTINENT_DIMS))}
     >
