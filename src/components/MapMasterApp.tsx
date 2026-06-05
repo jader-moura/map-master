@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   getBossStatuses,
   formatCountdown,
   type BossStatus,
 } from "@/lib/gw2/bosses";
+import { usePersistentState } from "@/lib/usePersistentState";
+import IconRail from "@/components/IconRail";
+import {
+  fireSpawnAlert,
+  requestNotifyPermission,
+  notifyPermission,
+  playBeep,
+} from "@/lib/gw2/notify";
 
 // Leaflet touches `window`, so the map must never render on the server.
 const Gw2Map = dynamic(() => import("@/components/Gw2Map"), {
@@ -20,13 +28,10 @@ const Gw2Map = dynamic(() => import("@/components/Gw2Map"), {
 
 type CategoryKey = "active" | "standard" | "hardcore";
 
-const CATEGORY: Record<
-  CategoryKey,
-  { label: string; dot: string; text: string }
-> = {
-  active: { label: "Active Now", dot: "bg-green-400", text: "text-green-400" },
-  standard: { label: "Standard Bosses", dot: "bg-amber-400", text: "text-amber-400" },
-  hardcore: { label: "Hardcore Bosses", dot: "bg-purple-400", text: "text-purple-300" },
+const CATEGORY: Record<CategoryKey, { label: string; dot: string }> = {
+  active: { label: "Active Now", dot: "bg-green-400" },
+  standard: { label: "Standard Bosses", dot: "bg-amber-400" },
+  hardcore: { label: "Hardcore Bosses", dot: "bg-purple-400" },
 };
 
 function categoryOf(s: BossStatus): CategoryKey {
@@ -45,11 +50,11 @@ function useNow(intervalMs = 1000) {
 
 /* --------------------------------- icons --------------------------------- */
 
-function Icon({ path, className = "h-5 w-5" }: { path: string; className?: string }) {
+function Icon({ path, className = "h-5 w-5", fill = "none" }: { path: string; className?: string; fill?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      fill="none"
+      fill={fill}
       stroke="currentColor"
       strokeWidth={1.8}
       strokeLinecap="round"
@@ -72,7 +77,11 @@ const P = {
   eyeOff: "M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 4.2A10.9 10.9 0 0 1 12 4c6.5 0 10 7 10 7a18 18 0 0 1-3.1 4M6.1 6.1A18 18 0 0 0 2 11s3.5 7 10 7a10.9 10.9 0 0 0 3.1-.5",
   chevron: "M6 9l6 6 6-6",
   pin: "M12 21s7-6.6 7-12a7 7 0 1 0-14 0c0 5.4 7 12 7 12zM12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+  star: "M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.8L12 17.3 5.8 20.8l1.6-6.8L2.2 8.9l6.9-.6z",
+  close: "M18 6 6 18M6 6l12 12",
 };
+
+type NotifSettings = { enabled: boolean; lead: number; sound: boolean };
 
 /* ------------------------------- boss row -------------------------------- */
 
@@ -80,58 +89,66 @@ function BossRow({
   status,
   selected,
   dimmed,
+  favorite,
   onSelect,
+  onToggleFavorite,
 }: {
   status: BossStatus;
   selected: boolean;
   dimmed: boolean;
+  favorite: boolean;
   onSelect: () => void;
+  onToggleFavorite: () => void;
 }) {
   const { boss, active, msUntilSpawn, msActiveLeft, spawn } = status;
-  const spawnLabel = spawn.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const spawnLabel = spawn.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <button
-      onClick={onSelect}
+    <div
       className={[
-        "flex w-full items-center gap-2.5 rounded-md border px-2.5 py-2 text-left transition",
-        selected
-          ? "border-orange-400/60 bg-orange-400/10"
-          : "border-transparent hover:bg-white/5",
+        "group flex w-full items-center gap-2 rounded-md border px-2 py-2 transition",
+        selected ? "border-orange-400/60 bg-orange-400/10" : "border-transparent hover:bg-white/5",
         dimmed ? "opacity-40" : "",
       ].join(" ")}
     >
-      <span
-        className={[
-          "h-2 w-2 shrink-0 rounded-full",
-          active ? "animate-pulse bg-green-400" : boss.hardcore ? "bg-purple-400" : "bg-amber-400",
-        ].join(" ")}
-      />
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-white">{boss.name}</span>
-        <span className="block truncate text-[11px] text-white/45">
-          {boss.area}, {boss.zone}
+      <button
+        onClick={onToggleFavorite}
+        aria-label={favorite ? "Unfavorite" : "Favorite"}
+        className={favorite ? "text-amber-400" : "text-white/25 hover:text-white/60"}
+      >
+        <Icon path={P.star} className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
+      </button>
+
+      <button onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <span
+          className={[
+            "h-2 w-2 shrink-0 rounded-full",
+            active ? "animate-pulse bg-green-400" : boss.hardcore ? "bg-purple-400" : "bg-amber-400",
+          ].join(" ")}
+        />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium text-white">{boss.name}</span>
+          <span className="block truncate text-[11px] text-white/45">
+            {boss.area}, {boss.zone}
+          </span>
         </span>
-      </span>
-      <span className="shrink-0 text-right">
-        {active ? (
-          <>
-            <span className="block text-xs font-semibold text-green-400">Active</span>
-            <span className="block text-[11px] text-white/45">{formatCountdown(msActiveLeft)}</span>
-          </>
-        ) : (
-          <>
-            <span className="block font-mono text-xs font-semibold text-white">
-              {formatCountdown(msUntilSpawn)}
-            </span>
-            <span className="block text-[11px] text-white/45">{spawnLabel}</span>
-          </>
-        )}
-      </span>
-    </button>
+        <span className="shrink-0 text-right">
+          {active ? (
+            <>
+              <span className="block text-xs font-semibold text-green-400">Active</span>
+              <span className="block text-[11px] text-white/45">{formatCountdown(msActiveLeft)}</span>
+            </>
+          ) : (
+            <>
+              <span className="block font-mono text-xs font-semibold text-white">
+                {formatCountdown(msUntilSpawn)}
+              </span>
+              <span className="block text-[11px] text-white/45">{spawnLabel}</span>
+            </>
+          )}
+        </span>
+      </button>
+    </div>
   );
 }
 
@@ -140,64 +157,58 @@ function BossRow({
 function Group({
   cat,
   items,
-  count,
   visible,
   collapsed,
   selectedId,
+  favorites,
   onToggleVisible,
   onToggleCollapsed,
   onSelect,
+  onToggleFavorite,
 }: {
   cat: CategoryKey;
   items: BossStatus[];
-  count: number;
   visible: boolean;
   collapsed: boolean;
   selectedId: string;
+  favorites: Set<string>;
   onToggleVisible: () => void;
   onToggleCollapsed: () => void;
   onSelect: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
 }) {
   const meta = CATEGORY[cat];
   if (items.length === 0) return null;
 
+  // Favorites float to the top of the group (otherwise keep time order).
+  const sorted = [...items].sort(
+    (a, b) => Number(favorites.has(b.boss.id)) - Number(favorites.has(a.boss.id)),
+  );
+
   return (
     <div className="border-b border-white/5 pb-2">
       <div className="flex items-center gap-2 px-1 py-2">
-        <button
-          onClick={onToggleCollapsed}
-          className="text-white/40 transition hover:text-white"
-          aria-label="Collapse"
-        >
-          <Icon
-            path={P.chevron}
-            className={`h-4 w-4 transition ${collapsed ? "-rotate-90" : ""}`}
-          />
+        <button onClick={onToggleCollapsed} className="text-white/40 transition hover:text-white" aria-label="Collapse">
+          <Icon path={P.chevron} className={`h-4 w-4 transition ${collapsed ? "-rotate-90" : ""}`} />
         </button>
         <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-        <span className="flex-1 text-xs font-semibold uppercase tracking-wide text-white/70">
-          {meta.label}
-        </span>
-        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-white/70">
-          {count}
-        </span>
-        <button
-          onClick={onToggleVisible}
-          className="text-white/40 transition hover:text-white"
-          aria-label="Toggle visibility"
-        >
+        <span className="flex-1 text-xs font-semibold uppercase tracking-wide text-white/70">{meta.label}</span>
+        <span className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-white/70">{items.length}</span>
+        <button onClick={onToggleVisible} className="text-white/40 transition hover:text-white" aria-label="Toggle visibility">
           <Icon path={visible ? P.eye : P.eyeOff} className="h-4 w-4" />
         </button>
       </div>
       {!collapsed && (
         <div className="flex flex-col gap-0.5">
-          {items.map((s) => (
+          {sorted.map((s) => (
             <BossRow
               key={s.boss.id}
               status={s}
               selected={s.boss.id === selectedId}
               dimmed={!visible}
+              favorite={favorites.has(s.boss.id)}
               onSelect={() => onSelect(s.boss.id)}
+              onToggleFavorite={() => onToggleFavorite(s.boss.id)}
             />
           ))}
         </div>
@@ -214,18 +225,59 @@ export default function MapMasterApp() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [visible, setVisible] = useState<Record<CategoryKey, boolean>>({
+
+  const [favList, setFavList] = usePersistentState<string[]>("gw2mm:favorites", []);
+  const [favOnly, setFavOnly] = usePersistentState<boolean>("gw2mm:favOnly", false);
+  const [visible, setVisible] = usePersistentState<Record<CategoryKey, boolean>>("gw2mm:visible", {
     active: true,
     standard: true,
     hardcore: true,
   });
-  const [collapsed, setCollapsed] = useState<Record<CategoryKey, boolean>>({
+  const [collapsed, setCollapsed] = usePersistentState<Record<CategoryKey, boolean>>("gw2mm:collapsed", {
     active: false,
     standard: false,
     hardcore: false,
   });
+  const [notif, setNotif] = usePersistentState<NotifSettings>("gw2mm:notif", {
+    enabled: false,
+    lead: 5,
+    sound: true,
+  });
 
-  // List grouping (filtered by search text only).
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default");
+  useEffect(() => setPerm(notifyPermission()), []);
+
+  const favorites = useMemo(() => new Set(favList), [favList]);
+  const toggleFavorite = (id: string) =>
+    setFavList((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+
+  /* ------------------------- notification engine ------------------------- */
+  const firedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!notif.enabled) return;
+    const leadMs = notif.lead * 60_000;
+    for (const s of statuses) {
+      if (s.active || !favorites.has(s.boss.id)) continue;
+      const key = `${s.boss.id}@${s.spawn.toISOString()}`;
+      if (s.msUntilSpawn > 0 && s.msUntilSpawn <= leadMs && !firedRef.current.has(key)) {
+        firedRef.current.add(key);
+        fireSpawnAlert(s, notif.sound);
+      }
+    }
+    // Keep the fired-set from growing without bound.
+    if (firedRef.current.size > 100) firedRef.current.clear();
+  }, [statuses, notif, favorites]);
+
+  async function toggleNotifications() {
+    if (!notif.enabled) {
+      const result = await requestNotifyPermission();
+      setPerm(result);
+    }
+    setNotif((n) => ({ ...n, enabled: !n.enabled }));
+  }
+
+  /* ----------------------------- derived data ---------------------------- */
   const q = query.trim().toLowerCase();
   const matches = (s: BossStatus) =>
     !q ||
@@ -233,37 +285,34 @@ export default function MapMasterApp() {
     s.boss.zone.toLowerCase().includes(q) ||
     s.boss.area.toLowerCase().includes(q);
 
-  const filtered = statuses.filter(matches);
+  const filtered = statuses
+    .filter(matches)
+    .filter((s) => !favOnly || favorites.has(s.boss.id));
+
   const groups: Record<CategoryKey, BossStatus[]> = {
     active: filtered.filter((s) => categoryOf(s) === "active"),
     standard: filtered.filter((s) => categoryOf(s) === "standard"),
     hardcore: filtered.filter((s) => categoryOf(s) === "hardcore"),
   };
 
-  // Map markers: only categories toggled visible, and matching the search.
   const mapStatuses = filtered.filter((s) => visible[categoryOf(s)]);
-
   const selected =
-    mapStatuses.find((s) => s.boss.id === selectedId) ??
-    mapStatuses[0] ??
-    statuses[0];
+    mapStatuses.find((s) => s.boss.id === selectedId) ?? mapStatuses[0] ?? statuses[0];
 
   const activeCount = statuses.filter((s) => s.active).length;
   const upcoming = statuses.find((s) => !s.active);
   const utc = now.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZone: "UTC",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC",
   });
+  const local = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const setAll = (v: boolean) =>
-    setVisible({ active: v, standard: v, hardcore: v });
+  const setAll = (v: boolean) => setVisible({ active: v, standard: v, hardcore: v });
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0a0a0f] text-white">
       {/* ---------------------------- top bar ---------------------------- */}
-      <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/10 bg-[#0d0d14] px-4">
+      <header className="relative flex h-14 shrink-0 items-center gap-4 border-b border-white/10 bg-[#0d0d14] px-4">
         <div className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 text-black">
             <Icon path={P.bolt} className="h-5 w-5" />
@@ -288,35 +337,107 @@ export default function MapMasterApp() {
             <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
             <span className="text-xs font-semibold text-white">{activeCount} active</span>
           </div>
-          <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-white/70">
-            {utc} UTC
+          <div className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-right font-mono text-xs text-white/70 sm:block">
+            <span className="text-white">{local}</span>
+            <span className="ml-2 text-white/40">{utc} UTC</span>
           </div>
+
+          {/* notifications button + popover */}
+          <button
+            onClick={() => setNotifOpen((o) => !o)}
+            className={[
+              "relative grid h-9 w-9 place-items-center rounded-lg border transition",
+              notif.enabled
+                ? "border-orange-400/50 bg-orange-400/15 text-orange-400"
+                : "border-white/10 bg-white/5 text-white/60 hover:text-white",
+            ].join(" ")}
+            aria-label="Notifications"
+          >
+            <Icon path={P.bell} />
+            {notif.enabled && (
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0d0d14]" />
+            )}
+          </button>
+
+          {notifOpen && (
+            <div className="absolute right-3 top-[60px] z-[2000] w-80 rounded-xl border border-white/10 bg-[#0d0d14] p-4 shadow-2xl">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white">Spawn notifications</h3>
+                <button onClick={() => setNotifOpen(false)} className="text-white/40 hover:text-white">
+                  <Icon path={P.close} className="h-4 w-4" />
+                </button>
+              </div>
+
+              <label className="flex items-center justify-between py-2">
+                <span className="text-sm text-white/80">Enable alerts</span>
+                <button
+                  onClick={toggleNotifications}
+                  className={[
+                    "relative h-6 w-11 rounded-full transition",
+                    notif.enabled ? "bg-orange-500" : "bg-white/15",
+                  ].join(" ")}
+                  role="switch"
+                  aria-checked={notif.enabled}
+                >
+                  <span
+                    className={[
+                      "absolute top-0.5 h-5 w-5 rounded-full bg-white transition",
+                      notif.enabled ? "left-[22px]" : "left-0.5",
+                    ].join(" ")}
+                  />
+                </button>
+              </label>
+
+              <label className="flex items-center justify-between py-2">
+                <span className="text-sm text-white/80">Alert me</span>
+                <select
+                  value={notif.lead}
+                  onChange={(e) => setNotif((n) => ({ ...n, lead: Number(e.target.value) }))}
+                  className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-sm text-white focus:outline-none"
+                >
+                  {[1, 5, 10, 15].map((m) => (
+                    <option key={m} value={m} className="bg-[#0d0d14]">
+                      {m} min before
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center justify-between py-2">
+                <span className="text-sm text-white/80">Play sound</span>
+                <input
+                  type="checkbox"
+                  checked={notif.sound}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    setNotif((n) => ({ ...n, sound: on }));
+                    if (on) playBeep();
+                  }}
+                  className="h-4 w-4 accent-orange-500"
+                />
+              </label>
+
+              <p className="mt-2 border-t border-white/10 pt-2 text-[11px] leading-relaxed text-white/45">
+                Alerts fire for your{" "}
+                <span className="text-amber-400">★ favorited</span> bosses.
+                {perm === "denied" && (
+                  <span className="mt-1 block text-red-400">
+                    Browser notifications are blocked — enable them in site settings (sound still works).
+                  </span>
+                )}
+                {perm === "unsupported" && (
+                  <span className="mt-1 block text-white/40">
+                    This browser doesn’t support notifications — sound only.
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        {/* -------------------------- icon rail -------------------------- */}
-        <nav className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-white/10 bg-[#0d0d14] py-3">
-          {[
-            { p: P.home, on: false },
-            { p: P.list, on: true },
-            { p: P.map, on: false },
-            { p: P.bell, on: false },
-            { p: P.info, on: false },
-          ].map((it, i) => (
-            <span
-              key={i}
-              className={[
-                "grid h-10 w-10 place-items-center rounded-lg transition",
-                it.on
-                  ? "bg-orange-500/15 text-orange-400"
-                  : "text-white/40 hover:bg-white/5 hover:text-white",
-              ].join(" ")}
-            >
-              <Icon path={it.p} />
-            </span>
-          ))}
-        </nav>
+        <IconRail />
 
         {/* --------------------------- sidebar --------------------------- */}
         <aside className="flex w-[340px] shrink-0 flex-col border-r border-white/10 bg-[#0b0b11]">
@@ -324,18 +445,33 @@ export default function MapMasterApp() {
             <div>
               <h1 className="text-sm font-bold text-white">Tyria World Bosses</h1>
               <p className="text-[11px] text-white/45">
-                Live timers · click a boss to focus the map
+                Times shown in your local zone ({tz})
               </p>
             </div>
 
-            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-2">
-              <Icon path={P.search} className="h-4 w-4 text-white/40" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search bosses or zones…"
-                className="w-full bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none"
-              />
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-2">
+                <Icon path={P.search} className="h-4 w-4 text-white/40" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search bosses or zones…"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => setFavOnly((v) => !v)}
+                aria-label="Show favorites only"
+                title="Show favorites only"
+                className={[
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-lg border transition",
+                  favOnly
+                    ? "border-amber-400/50 bg-amber-400/15 text-amber-400"
+                    : "border-white/10 bg-white/5 text-white/50 hover:text-white",
+                ].join(" ")}
+              >
+                <Icon path={P.star} className="h-4 w-4" fill={favOnly ? "currentColor" : "none"} />
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -360,22 +496,19 @@ export default function MapMasterApp() {
                 key={cat}
                 cat={cat}
                 items={groups[cat]}
-                count={groups[cat].length}
                 visible={visible[cat]}
                 collapsed={collapsed[cat]}
                 selectedId={selected?.boss.id ?? ""}
-                onToggleVisible={() =>
-                  setVisible((v) => ({ ...v, [cat]: !v[cat] }))
-                }
-                onToggleCollapsed={() =>
-                  setCollapsed((c) => ({ ...c, [cat]: !c[cat] }))
-                }
+                favorites={favorites}
+                onToggleVisible={() => setVisible((v) => ({ ...v, [cat]: !v[cat] }))}
+                onToggleCollapsed={() => setCollapsed((c) => ({ ...c, [cat]: !c[cat] }))}
                 onSelect={setSelectedId}
+                onToggleFavorite={toggleFavorite}
               />
             ))}
             {filtered.length === 0 && (
               <p className="px-3 py-6 text-center text-sm text-white/40">
-                No bosses match “{query}”.
+                {favOnly ? "No favorites yet — tap ☆ on a boss to add one." : `No bosses match “${query}”.`}
               </p>
             )}
           </div>
@@ -384,11 +517,7 @@ export default function MapMasterApp() {
         {/* ----------------------------- map ----------------------------- */}
         <main className="relative min-w-0 flex-1">
           {selected ? (
-            <Gw2Map
-              statuses={mapStatuses}
-              selectedId={selected.boss.id}
-              onSelect={setSelectedId}
-            />
+            <Gw2Map statuses={mapStatuses} selectedId={selected.boss.id} onSelect={setSelectedId} />
           ) : (
             <div className="grid h-full place-items-center text-white/40">
               No markers visible — enable a category.
@@ -410,19 +539,17 @@ export default function MapMasterApp() {
           {selected && (
             <div className="absolute bottom-3 left-3 z-[1000] w-72 rounded-xl border border-white/10 bg-[#0d0d14]/95 p-3 shadow-2xl backdrop-blur">
               <div className="flex items-start gap-2">
-                <span className="mt-0.5 text-orange-400">
-                  <Icon path={P.pin} className="h-4 w-4" />
-                </span>
+                <span className="mt-0.5 text-orange-400"><Icon path={P.pin} className="h-4 w-4" /></span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="truncate text-sm font-bold text-white">
-                      {selected.boss.name}
-                    </h2>
-                    {selected.boss.hardcore && (
-                      <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-purple-300">
-                        Hardcore
-                      </span>
-                    )}
+                    <h2 className="truncate text-sm font-bold text-white">{selected.boss.name}</h2>
+                    <button
+                      onClick={() => toggleFavorite(selected.boss.id)}
+                      className={favorites.has(selected.boss.id) ? "text-amber-400" : "text-white/30 hover:text-white/70"}
+                      aria-label="Favorite"
+                    >
+                      <Icon path={P.star} className="h-4 w-4" fill={favorites.has(selected.boss.id) ? "currentColor" : "none"} />
+                    </button>
                   </div>
                   <p className="truncate text-xs text-white/50">
                     {selected.boss.area}, {selected.boss.zone}
@@ -434,9 +561,12 @@ export default function MapMasterApp() {
                       </span>
                     ) : (
                       <span className="text-white/80">
-                        Next spawn in{" "}
+                        Next in{" "}
                         <span className="font-mono font-semibold text-orange-400">
                           {formatCountdown(selected.msUntilSpawn)}
+                        </span>{" "}
+                        <span className="text-white/45">
+                          ({selected.spawn.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} local)
                         </span>
                       </span>
                     )}

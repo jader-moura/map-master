@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { CRS, point, latLngBounds, type LatLngExpression } from "leaflet";
+import { CRS } from "leaflet";
 import {
   MapContainer,
   TileLayer,
@@ -10,21 +10,8 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import {
-  CONTINENT_ID,
-  FLOOR_ID,
-  CONTINENT_DIMS,
-  MAX_ZOOM,
-  type BossStatus,
-} from "@/lib/gw2/bosses";
-
-// Convert GW2 continent coordinates to Leaflet lat/lng using the Tyria tiling.
-function unproject(coord: [number, number]): LatLngExpression {
-  return CRS.Simple.pointToLatLng(point(coord[0], coord[1]), MAX_ZOOM);
-}
-
-// NB: host is "tiles" (plural). The "tile" singular host 404s every tile.
-const TILE_URL = `https://tiles.guildwars2.com/${CONTINENT_ID}/${FLOOR_ID}/{z}/{x}/{y}.jpg`;
+import { type BossStatus } from "@/lib/gw2/bosses";
+import { unproject, TILE_URL, TYRIA_BOUNDS, MAX_ZOOM } from "@/lib/gw2/mapTiles";
 
 // Imperatively re-centre the map whenever the selected boss changes.
 function Recenter({ coord }: { coord: [number, number] }) {
@@ -55,8 +42,7 @@ export default function Gw2Map({
       minZoom={2}
       maxZoom={MAX_ZOOM}
       className="h-full min-h-[360px] w-full"
-      // Tyria is square; constrain panning to the continent bounds.
-      maxBounds={latLngBounds(unproject([0, 0]), unproject(CONTINENT_DIMS))}
+      maxBounds={TYRIA_BOUNDS}
     >
       <TileLayer url={TILE_URL} noWrap minZoom={1} maxZoom={MAX_ZOOM} />
       {statuses.map((s) => {

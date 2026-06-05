@@ -1,5 +1,5 @@
-import MapMasterApp from "@/components/MapMasterApp";
+import HomeMapView from "@/components/HomeMapView";
 
 export default function Home() {
-  return <MapMasterApp />;
+  return <HomeMapView />;
 }
