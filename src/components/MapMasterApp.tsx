@@ -185,8 +185,10 @@ export default function MapMasterApp() {
     .filter((s) => visible[categoryOf(s)]);
 
   const mapStatuses = listStatuses;
-  const selected =
-    mapStatuses.find((s) => s.boss.id === selectedId) ?? mapStatuses[0]; // may be undefined
+  // Only "selected" once the user clicks a boss (in the list or on the map).
+  const selected = selectedId
+    ? mapStatuses.find((s) => s.boss.id === selectedId)
+    : undefined;
 
   const catCounts: Record<CategoryKey, number> = {
     active: statuses.filter((s) => categoryOf(s) === "active").length,
@@ -203,6 +205,28 @@ export default function MapMasterApp() {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const setAll = (v: boolean) => setVisible({ active: v, standard: v, hardcore: v });
+
+  // Today's full spawn schedule for the selected boss, in local time.
+  const schedule = selected
+    ? selected.boss.times
+        .map((t) => {
+          const [h, m] = t.split(":").map(Number);
+          const d = new Date(
+            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), h, m),
+          );
+          return {
+            utc: t,
+            local: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            ms: d.getTime(),
+          };
+        })
+        .sort((a, b) => a.ms - b.ms)
+    : [];
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const selNextUTC = selected
+    ? `${pad(selected.spawn.getUTCHours())}:${pad(selected.spawn.getUTCMinutes())}`
+    : "";
+  const durationMs = selected ? selected.boss.durationMin * 60_000 : 0;
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0a0a0f] text-white">
@@ -437,11 +461,15 @@ export default function MapMasterApp() {
 
         {/* ----------------------------- map ----------------------------- */}
         <main className="relative min-w-0 flex-1">
-          {selected ? (
-            <Gw2Map statuses={mapStatuses} selectedId={selected.boss.id} onSelect={setSelectedId} />
+          {mapStatuses.length > 0 ? (
+            <Gw2Map
+              statuses={mapStatuses}
+              selectedId={selected?.boss.id ?? ""}
+              onSelect={setSelectedId}
+            />
           ) : (
             <div className="grid h-full place-items-center text-white/40">
-              No bosses to show — enable a category or clear the search.
+              All categories hidden — enable a category or clear the search.
             </div>
           )}
 
@@ -456,43 +484,125 @@ export default function MapMasterApp() {
             ))}
           </div>
 
-          {/* selected boss card (bottom-left) */}
+          {/* selected boss info panel (bottom-left) */}
           {selected && (
-            <div className="absolute bottom-3 left-3 z-[1000] w-72 rounded-xl border border-white/10 bg-[#0d0d14]/95 p-3 shadow-2xl backdrop-blur">
-              <div className="flex items-start gap-2">
+            <div className="absolute bottom-3 left-3 z-[1000] flex max-h-[calc(100%-1.5rem)] w-80 flex-col rounded-xl border border-white/10 bg-[#0d0d14]/95 shadow-2xl backdrop-blur">
+              {/* header */}
+              <div className="flex items-start gap-2 border-b border-white/10 p-3">
                 <span className="mt-0.5 text-orange-400"><Icon path={P.pin} className="h-4 w-4" /></span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="truncate text-sm font-bold text-white">{selected.boss.name}</h2>
-                    <button
-                      onClick={() => toggleFavorite(selected.boss.id)}
-                      className={favorites.has(selected.boss.id) ? "text-amber-400" : "text-white/30 hover:text-white/70"}
-                      aria-label="Favorite"
-                    >
-                      <Icon path={P.star} className="h-4 w-4" fill={favorites.has(selected.boss.id) ? "currentColor" : "none"} />
-                    </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-sm font-bold text-white">{selected.boss.name}</h2>
+                    {selected.boss.hardcore && (
+                      <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-purple-300">
+                        Hardcore
+                      </span>
+                    )}
                   </div>
                   <p className="truncate text-xs text-white/50">
                     {selected.boss.area}, {selected.boss.zone}
                   </p>
-                  <p className="mt-1.5 text-sm">
-                    {selected.active ? (
-                      <span className="font-semibold text-green-400">
-                        Active now · {formatCountdown(selected.msActiveLeft)} left
-                      </span>
-                    ) : (
-                      <span className="text-white/80">
-                        Next in{" "}
-                        <span className="font-mono font-semibold text-orange-400">
-                          {formatCountdown(selected.msUntilSpawn)}
-                        </span>{" "}
-                        <span className="text-white/45">
-                          ({selected.spawn.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} local)
-                        </span>
-                      </span>
-                    )}
-                  </p>
                 </div>
+                <button
+                  onClick={() => toggleFavorite(selected.boss.id)}
+                  className={favorites.has(selected.boss.id) ? "text-amber-400" : "text-white/30 hover:text-white/70"}
+                  aria-label="Favorite"
+                >
+                  <Icon path={P.star} className="h-4 w-4" fill={favorites.has(selected.boss.id) ? "currentColor" : "none"} />
+                </button>
+                <button
+                  onClick={() => setSelectedId(null)}
+                  className="text-white/40 hover:text-white"
+                  aria-label="Close"
+                >
+                  <Icon path={P.close} className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* body */}
+              <div className="space-y-3 overflow-y-auto p-3">
+                {/* boss image */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selected.boss.image}
+                  alt={selected.boss.name}
+                  loading="lazy"
+                  className="h-32 w-full rounded-lg border border-white/10 object-cover"
+                />
+
+                {/* status */}
+                <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center">
+                  {selected.active ? (
+                    <>
+                      <div className="text-sm font-semibold text-green-400">Active now</div>
+                      <div className="text-xs text-white/50">
+                        {formatCountdown(selected.msActiveLeft)} remaining
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-mono text-lg font-bold text-orange-400">
+                        {formatCountdown(selected.msUntilSpawn)}
+                      </div>
+                      <div className="text-xs text-white/50">
+                        until spawn ·{" "}
+                        {selected.spawn.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} local
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* quick stats */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[
+                    { label: "Difficulty", value: selected.boss.hardcore ? "Hardcore" : "Standard" },
+                    { label: "Duration", value: `${selected.boss.durationMin}m` },
+                    { label: "Per day", value: `${selected.boss.times.length}×` },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-lg border border-white/10 bg-white/5 px-1 py-1.5">
+                      <div className="text-sm font-semibold text-white">{s.value}</div>
+                      <div className="text-[10px] uppercase tracking-wide text-white/40">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* daily schedule */}
+                <div>
+                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/40">
+                    Today’s spawns (local)
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {schedule.map((c) => {
+                      const isNext = c.utc === selNextUTC;
+                      const isPast = !isNext && c.ms + durationMs <= now.getTime();
+                      return (
+                        <span
+                          key={c.utc}
+                          className={[
+                            "rounded border px-1.5 py-0.5 font-mono text-[11px]",
+                            isNext
+                              ? "border-orange-400/50 bg-orange-400/15 font-semibold text-orange-300"
+                              : isPast
+                                ? "border-transparent text-white/25"
+                                : "border-white/10 text-white/70",
+                          ].join(" ")}
+                          title={`${c.utc} UTC`}
+                        >
+                          {c.local}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <a
+                  href={`https://wiki.guildwars2.com/index.php?search=${encodeURIComponent(selected.boss.name)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block rounded-lg border border-white/10 bg-white/5 py-1.5 text-center text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+                >
+                  View on GW2 Wiki ↗
+                </a>
               </div>
             </div>
           )}
