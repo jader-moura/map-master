@@ -29,7 +29,9 @@ export type Boss = {
 // Tyria continent tiling, used by the Leaflet map (see Gw2Map.tsx).
 export const CONTINENT_ID = 1;
 export const FLOOR_ID = 1;
-export const CONTINENT_DIMS: [number, number] = [81920, 81920];
+// Continent 1 (Tyria) is taller than it is wide — the extra height covers
+// Cantha (End of Dragons) in the far south. Max served tile zoom is 7.
+export const CONTINENT_DIMS: [number, number] = [81920, 114688];
 export const MAX_ZOOM = 7;
 
 export const BOSSES: Boss[] = [

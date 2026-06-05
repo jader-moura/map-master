@@ -1,0 +1,48 @@
+// Bounding rectangles (continent coordinates [[x0,y0],[x1,y1]]) for the GW2
+// maps used as filters, from https://api.guildwars2.com/v2/maps. Used to draw a
+// border around a selected map and zoom/fly to it.
+
+export type Rect = [[number, number], [number, number]];
+
+export const MAP_BOUNDS: Record<string, Rect> = {
+  "Bloodtide Coast": [[48000, 32256], [50432, 35456]],
+  "Wayfarer Foothills": [[54528, 27648], [56320, 32256]],
+  "Mount Maelstrom": [[50560, 37760], [54400, 40192]],
+  "Metrica Province": [[39936, 33536], [42112, 36864]],
+  "Blazeridge Steppes": [[61952, 28544], [64000, 32640]],
+  "Caledon Forest": [[42112, 32512], [44032, 36480]],
+  "Harathi Hinterlands": [[46208, 25856], [49408, 28672]],
+  Queensdale: [[42624, 28032], [46208, 30464]],
+  "Frostgorge Sound": [[53504, 24576], [56576, 27648]],
+  "Sparkfly Fen": [[48000, 35456], [50560, 38784]],
+  "Southsun Cove": [[44288, 35328], [46976, 37120]],
+  "Dry Top": [[36608, 30976], [38656, 33536]],
+  "Verdant Brink": [[33408, 30976], [36608, 32512]],
+  "Auric Basin": [[33280, 32512], [35328, 35328]],
+  "Tangled Depths": [[35328, 33792], [38656, 36096]],
+  "Dragon's Stand": [[34048, 36096], [37120, 38784]],
+  "Lake Doric": [[44928, 25472], [46208, 28032]],
+  "Crystal Oasis": [[57256, 42304], [62376, 44864]],
+  "Desert Highlands": [[57256, 39744], [62376, 42304]],
+  "Elon Riverlands": [[58240, 44736], [61824, 48192]],
+  "The Desolation": [[58240, 48192], [61824, 53312]],
+  "Domain of Vabbi": [[63616, 52352], [68480, 55552]],
+  "Domain of Istan": [[55318, 59916], [59158, 63756]],
+  "Jahai Bluffs": [[63316, 56376], [67412, 59576]],
+  "Thunderhead Peaks": [[55820, 34936], [59148, 38648]],
+  "Grothmar Valley": [[59392, 17504], [62592, 20064]],
+  "Bjora Marches": [[54911, 16972], [59391, 19148]],
+  "Seitung Province": [[21159, 100457], [24999, 103145]],
+  "New Kaineng City": [[25000, 98100], [28840, 100660]],
+  "The Echovald Wilds": [[29185, 100890], [33025, 103450]],
+  "Dragon's End": [[33126, 101838], [35302, 105550]],
+  "Skywatch Archipelago": [[23590, 22650], [27302, 24826]],
+  "Wizard's Tower": [[23590, 22650], [27302, 24826]],
+  Amnytas: [[22614, 18938], [25558, 21882]],
+  "Janthir Syntri": [[38294, 14082], [41494, 17154]],
+  "Bava Nisos": [[35720, 10344], [38280, 12904]],
+  "Shipwreck Strand": [[9530, 57385], [12090, 60585]],
+  "Starlit Weald": [[6330, 57385], [9530, 59945]],
+  "Eternity's Garden": [[3130, 59945], [5690, 63145]],
+  "Eye of the North": [[57344, 21248], [58624, 22528]],
+};
