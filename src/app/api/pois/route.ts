@@ -26,7 +26,7 @@ const getPois = unstable_cache(
     if (!res.ok) throw new Error(`floor fetch failed: ${res.status}`);
     const floor = (await res.json()) as RawFloor;
 
-    const data: PoiData = { waypoint: [], landmark: [], vista: [], heart: [], hero: [] };
+    const data: PoiData = { waypoint: [], portal: [], vista: [], heart: [], hero: [], landmark: [] };
 
     for (const region of Object.values(floor.regions ?? {})) {
       for (const map of Object.values(region.maps ?? {})) {
@@ -34,6 +34,8 @@ const getPois = unstable_cache(
           if (poi.type === "waypoint") data.waypoint.push({ name: poi.name ?? "Waypoint", coord: poi.coord });
           else if (poi.type === "landmark") data.landmark.push({ name: poi.name ?? "Point of Interest", coord: poi.coord });
           else if (poi.type === "vista") data.vista.push({ name: poi.name ?? "Vista", coord: poi.coord });
+          // "unlock" POIs are dungeon/instance portals; the game renders them with the dungeon icon.
+          else if (poi.type === "unlock") data.portal.push({ name: poi.name ?? "Portal", coord: poi.coord });
         }
         for (const task of Object.values(map.tasks ?? {})) {
           data.heart.push({ name: task.objective ?? "Renown Heart", coord: task.coord });

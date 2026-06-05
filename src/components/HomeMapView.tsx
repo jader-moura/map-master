@@ -132,9 +132,12 @@ export default function HomeMapView() {
                     on ? "hover:bg-white/5" : "opacity-45 hover:bg-white/5",
                   ].join(" ")}
                 >
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full border"
-                    style={{ backgroundColor: on ? meta.color : "transparent", borderColor: meta.color }}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={meta.iconUrl}
+                    alt=""
+                    className="h-5 w-5 shrink-0"
+                    style={{ imageRendering: "crisp-edges" }}
                   />
                   <span className="flex-1 text-sm font-medium text-white">{meta.label}</span>
                   <span className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-white/70">
