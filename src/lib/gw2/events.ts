@@ -3,8 +3,9 @@
 //
 // Schedule data comes from the official GW2 wiki "Widget:Event timer/data.json"
 // (the same source as the in-game /wiki et timer), fetched + cached by
-// /api/events. Each event is a daily timeline of phases ("segments"). In-game
-// map locations are resolved from /v2/maps and baked into EVENT_LOCATIONS below.
+// /api/events. Each event is a daily timeline of phases ("segments"). We surface
+// each map's *main* event(s) (MAIN_SEGMENTS) and treat it like a boss spawn:
+// "Active now" while it runs, otherwise a countdown to its next start.
 
 export type MetaSegment = {
   name: string;
@@ -26,18 +27,17 @@ export type MetaEvent = {
 
 export type MetaStatus = {
   id: string;
-  name: string;
-  category: string;
+  /** The main event's name (current one if active, else the next one). */
+  eventName: string;
+  /** Map/zone name. */
   map: string;
+  category: string;
   coord: [number, number];
-  /** Current phase name, or null during downtime/gaps. */
-  currentPhase: string | null;
-  /** ms until the current phase ends / next phase change. */
-  msUntilChange: number;
-  /** Next upcoming named phase. */
-  nextPhase: string;
-  /** Absolute time of the next phase change. */
-  nextChange: Date;
+  active: boolean;
+  /** Active: ms left in the event. Otherwise: ms until it next starts. */
+  msUntil: number;
+  /** Active: end time. Otherwise: next start time. */
+  at: Date;
 };
 
 // id -> in-game location (all on continent 1). coord = continent coordinates.
@@ -73,11 +73,44 @@ export const EVENT_LOCATIONS: Record<string, { map: string; coord: [number, numb
   "public-eotn": { map: "Eye of the North", coord: [57984, 21888] },
 };
 
+// Which segment(s) are the "main" event(s) of each map — the boss/meta fight,
+// not prep/downtime. Maps that rotate several distinct metas list them all.
+const MAIN_SEGMENTS: Record<string, number[]> = {
+  "lws2-dt": [2], // Sandstorm
+  "hot-vb": [3], // Night Bosses
+  "hot-ab": [3], // Octovine
+  "hot-td": [3], // Chak Gerent
+  "hot-ds": [1], // Advance on the Blighting Towers
+  "lws3-ld": [1, 2, 3],
+  "pof-co": [1], // Casino Blitz
+  "pof-dh": [1], // Buried Treasure
+  "pof-er": [2], // Doppelganger
+  "pof-td": [1], // Maws of Torment
+  "pof-dv": [1], // Serpents' Ire
+  "lws4-di": [1], // Palawadan
+  "lws4-jb": [2], // Death-Branded Shatterer
+  "lws4-tp": [1], // Thunderhead Keep
+  "lws5-gv": [1, 2, 3, 4],
+  "lws5-bm": [1, 2, 3, 4],
+  "eod-sp": [1], // Aetherblade Assault
+  "eod-nkc": [1], // Kaineng Blackout
+  "eod-ew": [1, 2], // Gang War / Aspenwood
+  "eod-de": [3], // The Battle for the Jade Sea
+  "soto-sa": [1], // Unlocking the Wizard's Tower
+  "soto-wt": [1, 2, 3],
+  "soto-am": [1], // Defense of Amnytas
+  "jw-js": [1],
+  "jw-bn": [1],
+  "voe-ss": [1],
+  "voe-sw": [1],
+  "voe-eg": [1],
+  "public-eotn": [1, 2, 3, 4],
+};
+
 const DAY_MIN = 1440;
 
 type Interval = { r: number; start: number; end: number };
 
-/** Expand a day's timeline (minutes from 00:00 UTC) from partial + repeating pattern. */
 function dayIntervals(seq: MetaEvent["sequences"]): Interval[] {
   const out: Interval[] = [];
   let t = 0;
@@ -87,7 +120,6 @@ function dayIntervals(seq: MetaEvent["sequences"]): Interval[] {
   }
   if (seq.pattern.length === 0) return out;
   let i = 0;
-  // Guard against zero-length patterns causing an infinite loop.
   let guard = 0;
   while (t < DAY_MIN && guard++ < 10000) {
     const e = seq.pattern[i % seq.pattern.length];
@@ -100,45 +132,59 @@ function dayIntervals(seq: MetaEvent["sequences"]): Interval[] {
 
 function segName(event: MetaEvent, r: number): string | null {
   const s = event.segments[String(r)];
-  if (!s || !s.name) return null; // r:0 / unnamed = downtime
-  return s.name;
+  return s && s.name ? s.name : null;
 }
 
-/** Compute the current + next phase for a meta event at `now`. */
+function nowMinutes(now: Date): number {
+  return now.getUTCHours() * 60 + now.getUTCMinutes() + now.getUTCSeconds() / 60;
+}
+
+/** Status of a meta event's main phase: active, or counting down to next start. */
 export function getMetaStatus(event: MetaEvent, now: Date): MetaStatus | null {
   const loc = EVENT_LOCATIONS[event.id];
   if (!loc) return null;
-
-  const nowMin =
-    now.getUTCHours() * 60 + now.getUTCMinutes() + now.getUTCSeconds() / 60;
+  const main = new Set(MAIN_SEGMENTS[event.id] ?? []);
   const intervals = dayIntervals(event.sequences);
-
-  const current = intervals.find((x) => nowMin >= x.start && nowMin < x.end);
-  const currentPhase = current ? segName(event, current.r) : null;
-
-  // Next phase change (the boundary at/after `now`).
-  const nextBoundaryMin = current ? current.end : DAY_MIN;
-  // Find the next *named* phase to display as "up next".
-  let nextNamed: Interval | undefined = intervals.find(
-    (x) => x.start >= (current ? current.end : nowMin) && segName(event, x.r),
-  );
-  if (!nextNamed) nextNamed = intervals.find((x) => segName(event, x.r)); // wrap to next day
-
-  const msPerMin = 60_000;
-  const msUntilChange = (nextBoundaryMin - nowMin) * msPerMin;
-
-  const nextChange = new Date(now.getTime() + msUntilChange);
-
-  return {
+  const nm = nowMinutes(now);
+  const base = {
     id: event.id,
-    name: event.name,
-    category: event.category,
     map: loc.map,
+    category: event.category,
     coord: loc.coord,
-    currentPhase,
-    msUntilChange: Math.max(0, msUntilChange),
-    nextPhase: nextNamed ? segName(event, nextNamed.r) ?? "—" : "—",
-    nextChange,
+  };
+
+  const current = intervals.find((x) => nm >= x.start && nm < x.end);
+  if (current && main.has(current.r)) {
+    const msUntil = (current.end - nm) * 60_000;
+    return {
+      ...base,
+      eventName: segName(event, current.r) ?? event.name,
+      active: true,
+      msUntil: Math.max(0, msUntil),
+      at: new Date(now.getTime() + msUntil),
+    };
+  }
+
+  // Next main-segment start (today's remainder, then tomorrow).
+  let next: { start: number; r: number } | undefined;
+  for (const off of [0, DAY_MIN]) {
+    for (const x of intervals) {
+      if (!main.has(x.r)) continue;
+      const start = x.start + off;
+      if (start > nm) {
+        next = { start, r: x.r };
+        break;
+      }
+    }
+    if (next) break;
+  }
+  const msUntil = next ? (next.start - nm) * 60_000 : 0;
+  return {
+    ...base,
+    eventName: next ? segName(event, next.r) ?? event.name : event.name,
+    active: false,
+    msUntil: Math.max(0, msUntil),
+    at: new Date(now.getTime() + msUntil),
   };
 }
 
@@ -148,24 +194,23 @@ export function getAllMetaStatuses(events: MetaEvent[], now: Date): MetaStatus[]
     .filter((s): s is MetaStatus => s !== null);
 }
 
-/** Upcoming named phase changes for a meta event, with absolute times. */
-export function getUpcomingPhases(
+/** Upcoming main-event start times for a meta event (for the info panel). */
+export function getUpcomingMainEvents(
   event: MetaEvent,
   now: Date,
   count = 6,
 ): { name: string; at: Date }[] {
+  const main = new Set(MAIN_SEGMENTS[event.id] ?? []);
   const intervals = dayIntervals(event.sequences);
-  const nowMin =
-    now.getUTCHours() * 60 + now.getUTCMinutes() + now.getUTCSeconds() / 60;
-  const base = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const nm = nowMinutes(now);
+  const dayBase = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const res: { name: string; at: Date }[] = [];
-  for (const dayOffset of [0, 1]) {
+  for (const off of [0, DAY_MIN]) {
     for (const x of intervals) {
-      const name = segName(event, x.r);
-      if (!name) continue;
-      const startMin = x.start + dayOffset * DAY_MIN;
-      if (startMin <= nowMin) continue;
-      res.push({ name, at: new Date(base + startMin * 60_000) });
+      if (!main.has(x.r)) continue;
+      const start = x.start + off;
+      if (start <= nm) continue;
+      res.push({ name: segName(event, x.r) ?? event.name, at: new Date(dayBase + start * 60_000) });
       if (res.length >= count) return res;
     }
   }

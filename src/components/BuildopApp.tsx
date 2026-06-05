@@ -10,7 +10,7 @@ import {
 } from "@/lib/gw2/bosses";
 import {
   getAllMetaStatuses,
-  getUpcomingPhases,
+  getUpcomingMainEvents,
   type MetaEvent,
   type MetaStatus,
 } from "@/lib/gw2/events";
@@ -34,8 +34,8 @@ const TimelineMap = dynamic(() => import("@/components/TimelineMap"), {
 });
 
 const EPOCH = new Date(0);
-const META_ACTIVE = "#38bdf8"; // sky
-const META_IDLE = "#64748b"; // slate
+const ACTIVE_COLOR = "#22c55e"; // green — happening now
+const META_COLOR = "#38bdf8"; // sky — upcoming meta
 
 function useNow(intervalMs = 1000) {
   const [now, setNow] = useState<Date | null>(null);
@@ -60,12 +60,16 @@ type Item = {
   color: string;
   active: boolean;
   sortMs: number;
+  /** Active: ms remaining. Otherwise: ms until it starts. */
+  mainMs: number;
+  /** Local start time when not active (empty while active). */
+  atLabel: string;
   boss?: BossStatus;
   meta?: MetaStatus;
 };
 
 function bossColor(s: BossStatus) {
-  if (s.active) return "#22c55e";
+  if (s.active) return ACTIVE_COLOR;
   return s.boss.hardcore ? "#a855f7" : "#f59e0b";
 }
 
@@ -111,32 +115,17 @@ function Row({
         <span className="shrink-0 text-right">
           {!ready ? (
             <span className="block font-mono text-xs font-semibold text-white/25">·····</span>
-          ) : item.kind === "boss" ? (
-            item.boss!.active ? (
-              <>
-                <span className="block text-xs font-semibold text-green-400">Active</span>
-                <span className="block text-[11px] text-white/45">
-                  {formatCountdown(item.boss!.msActiveLeft)}
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="block font-mono text-xs font-semibold text-white">
-                  {formatCountdown(item.boss!.msUntilSpawn)}
-                </span>
-                <span className="block text-[11px] text-white/45">
-                  {item.boss!.spawn.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </>
-            )
+          ) : item.active ? (
+            <>
+              <span className="block text-xs font-semibold text-green-400">Active</span>
+              <span className="block text-[11px] text-white/45">{formatCountdown(item.mainMs)}</span>
+            </>
           ) : (
             <>
               <span className="block font-mono text-xs font-semibold text-white">
-                {formatCountdown(item.meta!.msUntilChange)}
+                {formatCountdown(item.mainMs)}
               </span>
-              <span className="block max-w-[120px] truncate text-[11px] text-sky-300/80">
-                {item.meta!.currentPhase ?? `→ ${item.meta!.nextPhase}`}
-              </span>
+              <span className="block text-[11px] text-white/45">{item.atLabel}</span>
             </>
           )}
         </span>
@@ -224,19 +213,27 @@ export default function BuildopApp() {
         color: bossColor(s),
         active: s.active,
         sortMs: s.active ? 0 : s.msUntilSpawn,
+        mainMs: s.active ? s.msActiveLeft : s.msUntilSpawn,
+        atLabel: s.active
+          ? ""
+          : s.spawn.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         boss: s,
       });
     }
     for (const m of metaStatuses) {
       list.push({
         id: m.id,
-        name: m.name,
+        name: m.eventName,
         kind: "meta",
         map: m.map,
         coord: m.coord,
-        color: m.currentPhase ? META_ACTIVE : META_IDLE,
-        active: m.currentPhase !== null,
-        sortMs: m.msUntilChange,
+        color: m.active ? ACTIVE_COLOR : META_COLOR,
+        active: m.active,
+        sortMs: m.active ? 0 : m.msUntil,
+        mainMs: m.msUntil,
+        atLabel: m.active
+          ? ""
+          : m.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         meta: m,
       });
     }
@@ -256,11 +253,7 @@ export default function BuildopApp() {
     if (favOnly && !favorites.has(i.id)) return false;
     if (mapFilter !== "all" && i.map !== mapFilter) return false;
     if (!q) return true;
-    return (
-      i.name.toLowerCase().includes(q) ||
-      i.map.toLowerCase().includes(q) ||
-      (i.meta?.currentPhase ?? "").toLowerCase().includes(q)
-    );
+    return i.name.toLowerCase().includes(q) || i.map.toLowerCase().includes(q);
   });
 
   const selected = selectedId ? filtered.find((i) => i.id === selectedId) : undefined;
@@ -278,7 +271,7 @@ export default function BuildopApp() {
     coord: i.coord,
     color: i.color,
     label: i.name,
-    sub: i.kind === "boss" ? i.map : i.meta?.currentPhase ?? i.map,
+    sub: i.map,
   }));
 
   // When a specific map is chosen, highlight + fly to its rectangle.
@@ -296,7 +289,7 @@ export default function BuildopApp() {
   const selectedEvent =
     selected?.kind === "meta" ? events?.find((e) => e.id === selected.id) : undefined;
   const phaseSchedule =
-    selectedEvent && now ? getUpcomingPhases(selectedEvent, now, 6) : [];
+    selectedEvent && now ? getUpcomingMainEvents(selectedEvent, now, 6) : [];
 
   // Selected boss's daily schedule (local).
   const bossSchedule =
@@ -505,7 +498,7 @@ export default function BuildopApp() {
           {/* legend */}
           <div className="pointer-events-none absolute right-3 top-3 z-[1000] rounded-lg border border-white/10 bg-[#0d0d14]/90 px-3 py-2 text-xs backdrop-blur">
             <div className="mb-1 font-semibold text-white/70">Legend</div>
-            {[["#22c55e", "Active boss"], ["#f59e0b", "World boss"], ["#a855f7", "Hardcore"], [META_ACTIVE, "Meta (running)"]].map(([c, l]) => (
+            {[[ACTIVE_COLOR, "Happening now"], ["#f59e0b", "World boss"], ["#a855f7", "Hardcore boss"], [META_COLOR, "Meta (upcoming)"]].map(([c, l]) => (
               <div key={l} className="flex items-center gap-2 py-0.5 text-white/60">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c }} /> {l}
               </div>
@@ -570,15 +563,24 @@ export default function BuildopApp() {
                 ) : (
                   <>
                     <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center">
-                      <div className="text-xs text-white/50">Now</div>
-                      <div className="text-sm font-semibold text-sky-300">{selected.meta!.currentPhase ?? "Downtime"}</div>
-                      <div className="mt-1 text-xs text-white/60">
-                        next: <span className="text-white">{selected.meta!.nextPhase}</span> in{" "}
-                        <span className="font-mono font-semibold text-orange-400">{formatCountdown(selected.meta!.msUntilChange)}</span>
-                      </div>
+                      {selected.meta!.active ? (
+                        <div className="text-sm font-semibold text-green-400">
+                          Active now · {formatCountdown(selected.meta!.msUntil)} left
+                        </div>
+                      ) : (
+                        <>
+                          <div className="font-mono text-lg font-bold text-orange-400">
+                            {formatCountdown(selected.meta!.msUntil)}
+                          </div>
+                          <div className="text-xs text-white/50">
+                            until {selected.meta!.eventName} ·{" "}
+                            {selected.meta!.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} local
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div>
-                      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/40">Upcoming phases (local)</div>
+                      <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/40">Upcoming (local)</div>
                       <div className="flex flex-col gap-1">
                         {phaseSchedule.map((p, idx) => (
                           <div key={idx} className="flex items-center justify-between rounded border border-white/10 px-2 py-1 text-xs">
