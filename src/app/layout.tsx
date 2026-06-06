@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import QueryProvider from "@/components/QueryProvider";
 
 const geistSans = Geist({
@@ -111,6 +112,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <QueryProvider>{children}</QueryProvider>
+        <Analytics />
       </body>
     </html>
   );
