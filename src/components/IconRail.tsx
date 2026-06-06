@@ -7,6 +7,7 @@ import { Icon, P } from "@/components/icons";
 const LINKS = [
   { href: "/", path: P.home, label: "Map" },
   { href: "/bosses", path: P.list, label: "Event & boss timers" },
+  { href: "/timeline", path: P.clock, label: "Event timeline" },
   { href: "/market", path: P.coins, label: "Trading Post prices" },
 ];
 

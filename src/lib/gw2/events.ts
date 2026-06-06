@@ -203,6 +203,50 @@ export function getAllMetaStatuses(events: MetaEvent[], now: Date): MetaStatus[]
     .filter((s): s is MetaStatus => s !== null);
 }
 
+export type WindowSegment = {
+  name: string | null;
+  color: string;
+  startMs: number;
+  endMs: number;
+};
+
+function rgb(c: number[]): string {
+  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}
+
+function segColor(event: MetaEvent, r: number): string {
+  const bg = event.segments[String(r)]?.bg;
+  if (!bg || bg === "transparent") return "rgba(255,255,255,0.04)";
+  if (Array.isArray(bg)) {
+    // number[][] = gradient (use first stop); number[] = single colour.
+    if (Array.isArray(bg[0])) return rgb(bg[0] as number[]);
+    return rgb(bg as number[]);
+  }
+  return "rgba(255,255,255,0.04)";
+}
+
+/** All phase segments of an event overlapping [startMs, endMs], as absolute times. */
+export function getWindowSegments(
+  event: MetaEvent,
+  startMs: number,
+  endMs: number,
+): WindowSegment[] {
+  const intervals = dayIntervals(event.sequences);
+  const dayMs = 86_400_000;
+  const d = new Date(startMs);
+  const firstDay = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const out: WindowSegment[] = [];
+  for (let day = firstDay - dayMs; day <= endMs; day += dayMs) {
+    for (const iv of intervals) {
+      const s = day + iv.start * 60_000;
+      const e = day + iv.end * 60_000;
+      if (e <= startMs || s >= endMs) continue;
+      out.push({ name: segName(event, iv.r), color: segColor(event, iv.r), startMs: s, endMs: e });
+    }
+  }
+  return out;
+}
+
 /** Upcoming main-event start times for a meta event (for the info panel). */
 export function getUpcomingMainEvents(
   event: MetaEvent,

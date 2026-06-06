@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
-import { EVENT_LOCATIONS, type MetaEvent } from "@/lib/gw2/events";
+import { type MetaEvent } from "@/lib/gw2/events";
 
 const WIKI_API =
   "https://wiki.guildwars2.com/api.php?action=query&format=json&prop=revisions&rvprop=content&rvslots=main&titles=" +
@@ -45,7 +45,7 @@ const getEvents = unstable_cache(
 
     const out: MetaEvent[] = [];
     for (const [id, e] of Object.entries(data.events)) {
-      if (!EVENT_LOCATIONS[id]) continue; // only events we can place on the map
+      if (id === "t" || !e.name) continue; // skip the template entry
       out.push({
         id,
         category: e.category ?? "",

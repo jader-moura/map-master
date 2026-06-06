@@ -42,4 +42,5 @@ export const P = {
   copy: "M9 9h10v10H9zM5 15H4V5h10v1",
   check: "M5 12l5 5L20 6",
   coins: "M9 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM15 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12",
+  clock: "M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
 };
