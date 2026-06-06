@@ -10,6 +10,7 @@
 export type MetaSegment = {
   name: string;
   link?: string;
+  chatlink?: string;
   bg?: number[] | number[][] | string;
 };
 
@@ -38,6 +39,8 @@ export type MetaStatus = {
   msUntil: number;
   /** Active: end time. Otherwise: next start time. */
   at: Date;
+  /** Waypoint chat code for the relevant main event, if any. */
+  waypoint?: string;
 };
 
 // id -> in-game location (all on continent 1). coord = continent coordinates.
@@ -135,6 +138,10 @@ function segName(event: MetaEvent, r: number): string | null {
   return s && s.name ? s.name : null;
 }
 
+function segChatlink(event: MetaEvent, r: number): string | undefined {
+  return event.segments[String(r)]?.chatlink;
+}
+
 function nowMinutes(now: Date): number {
   return now.getUTCHours() * 60 + now.getUTCMinutes() + now.getUTCSeconds() / 60;
 }
@@ -162,6 +169,7 @@ export function getMetaStatus(event: MetaEvent, now: Date): MetaStatus | null {
       active: true,
       msUntil: Math.max(0, msUntil),
       at: new Date(now.getTime() + msUntil),
+      waypoint: segChatlink(event, current.r),
     };
   }
 
@@ -185,6 +193,7 @@ export function getMetaStatus(event: MetaEvent, now: Date): MetaStatus | null {
     active: false,
     msUntil: Math.max(0, msUntil),
     at: new Date(now.getTime() + msUntil),
+    waypoint: next ? segChatlink(event, next.r) : undefined,
   };
 }
 

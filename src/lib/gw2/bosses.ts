@@ -76,6 +76,24 @@ export const BOSSES: Boss[] = [
     times: ["02:00","06:00","10:30","15:00","18:00","23:00"] },
 ];
 
+// Nearest-waypoint chat codes (paste in-game chat to teleport). Type-4 map links
+// from the GW2 wiki event-timer data.
+export const BOSS_WAYPOINTS: Record<string, string> = {
+  taidha: "[&BKgBAAA=]",
+  svanir: "[&BMIDAAA=]",
+  megadestroyer: "[&BM0CAAA=]",
+  "fire-elemental": "[&BEcAAAA=]",
+  shatterer: "[&BE4DAAA=]",
+  "jungle-wurm": "[&BEEFAAA=]",
+  modniir: "[&BLAAAAA=]",
+  "shadow-behemoth": "[&BPcAAAA=]",
+  "claw-of-jormag": "[&BHoCAAA=]",
+  "golem-mark-ii": "[&BNQCAAA=]",
+  tequatl: "[&BNABAAA=]",
+  "triple-trouble": "[&BKoBAAA=]",
+  "karka-queen": "[&BNUGAAA=]",
+};
+
 export type BossStatus = {
   boss: Boss;
   /** Next (or current) spawn as a Date. */

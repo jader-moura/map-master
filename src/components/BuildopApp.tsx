@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getBossStatuses,
   formatCountdown,
+  BOSS_WAYPOINTS,
   type BossStatus,
 } from "@/lib/gw2/bosses";
 import {
@@ -64,6 +65,8 @@ type Item = {
   mainMs: number;
   /** Local start time when not active (empty while active). */
   atLabel: string;
+  /** Waypoint chat code (paste in-game to teleport). */
+  waypoint?: string;
   boss?: BossStatus;
   meta?: MetaStatus;
 };
@@ -175,6 +178,18 @@ export default function BuildopApp() {
   const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default");
   useEffect(() => setPerm(notifyPermission()), []);
 
+  const [copied, setCopied] = useState(false);
+  function copyWaypoint(wp?: string) {
+    if (!wp || typeof navigator === "undefined" || !navigator.clipboard) return;
+    navigator.clipboard
+      .writeText(wp)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {});
+  }
+
   const favorites = useMemo(() => new Set(favList), [favList]);
   const toggleFavorite = (id: string) =>
     setFavList((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
@@ -217,6 +232,7 @@ export default function BuildopApp() {
         atLabel: s.active
           ? ""
           : s.spawn.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        waypoint: BOSS_WAYPOINTS[s.boss.id],
         boss: s,
       });
     }
@@ -234,6 +250,7 @@ export default function BuildopApp() {
         atLabel: m.active
           ? ""
           : m.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        waypoint: m.waypoint,
         meta: m,
       });
     }
@@ -591,6 +608,16 @@ export default function BuildopApp() {
                       </div>
                     </div>
                   </>
+                )}
+
+                {selected.waypoint && (
+                  <button
+                    onClick={() => copyWaypoint(selected.waypoint)}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-orange-400/40 bg-orange-400/15 py-2 text-xs font-semibold text-orange-300 transition hover:bg-orange-400/25"
+                  >
+                    <Icon path={copied ? P.check : P.copy} className="h-4 w-4" />
+                    {copied ? "Copied!" : "Copy waypoint"}
+                  </button>
                 )}
 
                 <a

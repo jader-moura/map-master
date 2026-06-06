@@ -6,7 +6,8 @@ import { Icon, P } from "@/components/icons";
 
 const LINKS = [
   { href: "/", path: P.home, label: "Map" },
-  { href: "/bosses", path: P.list, label: "Boss timers" },
+  { href: "/bosses", path: P.list, label: "Event & boss timers" },
+  { href: "/market", path: P.coins, label: "Trading Post prices" },
 ];
 
 export default function IconRail() {
