@@ -7,6 +7,7 @@ import {
   getBossStatuses,
   formatCountdown,
   BOSS_WAYPOINTS,
+  BOSS_LEVELS,
   type BossStatus,
 } from "@/lib/gw2/bosses";
 import {
@@ -37,6 +38,7 @@ const TimelineMap = dynamic(() => import("@/components/TimelineMap"), {
 const EPOCH = new Date(0);
 const ACTIVE_COLOR = "#22c55e"; // green — happening now
 const META_COLOR = "#38bdf8"; // sky — upcoming meta
+const META_LEVEL = 80; // all expansion meta-event maps are level 80
 
 function useNow(intervalMs = 1000) {
   const [now, setNow] = useState<Date | null>(null);
@@ -60,6 +62,7 @@ type Item = {
   coord: [number, number];
   color: string;
   active: boolean;
+  level: number;
   sortMs: number;
   /** Active: ms remaining. Otherwise: ms until it starts. */
   mainMs: number;
@@ -112,7 +115,14 @@ function Row({
           style={{ backgroundColor: ready ? item.color : "#475569" }}
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-white">{item.name}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-sm font-medium text-white">{item.name}</span>
+            {item.level > 0 && (
+              <span className="shrink-0 rounded bg-white/10 px-1 text-[10px] font-semibold text-white/50">
+                {item.level}
+              </span>
+            )}
+          </span>
           <span className="block truncate text-[11px] text-white/45">{item.map}</span>
         </span>
         <span className="shrink-0 text-right">
@@ -227,6 +237,7 @@ export default function BuildopApp() {
         coord: s.boss.coord,
         color: bossColor(s),
         active: s.active,
+        level: BOSS_LEVELS[s.boss.id] ?? 0,
         sortMs: s.active ? 0 : s.msUntilSpawn,
         mainMs: s.active ? s.msActiveLeft : s.msUntilSpawn,
         atLabel: s.active
@@ -245,6 +256,7 @@ export default function BuildopApp() {
         coord: m.coord,
         color: m.active ? ACTIVE_COLOR : META_COLOR,
         active: m.active,
+        level: META_LEVEL,
         sortMs: m.active ? 0 : m.msUntil,
         mainMs: m.msUntil,
         atLabel: m.active
@@ -530,6 +542,11 @@ export default function BuildopApp() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-sm font-bold text-white">{selected.name}</h2>
+                    {selected.level > 0 && (
+                      <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-white/60">
+                        Level {selected.level}
+                      </span>
+                    )}
                     {selected.kind === "meta" && (
                       <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-sky-300">
                         {selected.meta!.category}

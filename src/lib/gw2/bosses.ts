@@ -94,6 +94,23 @@ export const BOSS_WAYPOINTS: Record<string, string> = {
   "karka-queen": "[&BNUGAAA=]",
 };
 
+// Boss/creature levels (from the GW2 wiki infoboxes).
+export const BOSS_LEVELS: Record<string, number> = {
+  taidha: 50,
+  svanir: 10,
+  megadestroyer: 66,
+  "fire-elemental": 15,
+  shatterer: 50,
+  "jungle-wurm": 22,
+  modniir: 43,
+  "shadow-behemoth": 15,
+  "golem-mark-ii": 68,
+  "claw-of-jormag": 80,
+  tequatl: 65,
+  "triple-trouble": 80,
+  "karka-queen": 80,
+};
+
 export type BossStatus = {
   boss: Boss;
   /** Next (or current) spawn as a Date. */
