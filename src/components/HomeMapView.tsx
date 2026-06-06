@@ -36,9 +36,15 @@ export default function HomeMapView() {
     gcTime: Infinity,
   });
 
-  const [visible, setVisible] = usePersistentState<Record<PoiKind, boolean>>(
+  const [stored, setVisible] = usePersistentState<Record<PoiKind, boolean>>(
     "buildop:poiVisible",
     DEFAULT_VISIBLE,
+  );
+  // Merge over defaults so POI kinds added after a user's prefs were saved
+  // (e.g. "travel") still honor their defaultOn instead of reading undefined.
+  const visible = useMemo(
+    () => ({ ...DEFAULT_VISIBLE, ...stored }),
+    [stored],
   );
   const [query, setQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -134,7 +140,12 @@ export default function HomeMapView() {
               return (
                 <button
                   key={kind}
-                  onClick={() => setVisible((v) => ({ ...v, [kind]: !v[kind] }))}
+                  onClick={() =>
+                    setVisible((v) => {
+                      const merged = { ...DEFAULT_VISIBLE, ...v };
+                      return { ...merged, [kind]: !merged[kind] };
+                    })
+                  }
                   className={[
                     "flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition",
                     on ? "hover:bg-white/5" : "opacity-45 hover:bg-white/5",

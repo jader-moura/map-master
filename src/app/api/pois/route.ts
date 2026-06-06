@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
-import type { PoiData } from "@/lib/gw2/pois";
+import { TRAVEL_PORTALS, type PoiData } from "@/lib/gw2/pois";
 
 const FLOOR_URL = "https://api.guildwars2.com/v2/continents/1/floors/1";
 
@@ -26,7 +26,7 @@ const getPois = unstable_cache(
     if (!res.ok) throw new Error(`floor fetch failed: ${res.status}`);
     const floor = (await res.json()) as RawFloor;
 
-    const data: PoiData = { waypoint: [], portal: [], vista: [], heart: [], hero: [], landmark: [] };
+    const data: PoiData = { waypoint: [], travel: TRAVEL_PORTALS, portal: [], vista: [], heart: [], hero: [], landmark: [] };
 
     for (const region of Object.values(floor.regions ?? {})) {
       for (const map of Object.values(region.maps ?? {})) {
@@ -47,7 +47,7 @@ const getPois = unstable_cache(
     }
     return data;
   },
-  ["gw2-pois-c1-f1"],
+  ["gw2-pois-c1-f1-v2"],
   { revalidate: 60 * 60 * 24 * 7 }, // refresh weekly
 );
 
