@@ -41,6 +41,7 @@ export default function HomeMapView() {
     DEFAULT_VISIBLE,
   );
   const [query, setQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const counts = useMemo(() => {
     const c = {} as Record<PoiKind, number>;
@@ -79,11 +80,18 @@ export default function HomeMapView() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <IconRail />
+      <div className="relative flex min-h-0 flex-1">
+        <IconRail onToggleActive={() => setSidebarOpen((o) => !o)} />
 
-        {/* sidebar */}
-        <aside className="flex w-[300px] shrink-0 flex-col border-r border-white/10 bg-[#0b0b11]">
+        {/* sidebar — mobile full-height overlay beside the rail; desktop column */}
+        <aside
+          className={[
+            "flex-col bg-[#0b0b11]",
+            "absolute inset-y-0 left-14 right-0 z-[1200] border-l border-white/10 shadow-2xl",
+            "lg:static lg:inset-auto lg:left-auto lg:right-auto lg:z-auto lg:w-[300px] lg:shrink-0 lg:border-l-0 lg:border-r lg:shadow-none",
+            sidebarOpen ? "flex" : "hidden",
+          ].join(" ")}
+        >
           <div className="shrink-0 space-y-3 p-3">
             <div>
               <h1 className="text-sm font-bold text-white">Guild Wars 2 Map</h1>

@@ -10,7 +10,12 @@ const LINKS = [
   { href: "/market", path: P.coins, label: "Trading Post prices" },
 ];
 
-export default function IconRail() {
+export default function IconRail({
+  onToggleActive,
+}: {
+  /** Called when the icon for the current page is clicked (toggles its panel). */
+  onToggleActive?: () => void;
+}) {
   const pathname = usePathname();
   return (
     <nav className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-white/10 bg-[#0d0d14] py-3">
@@ -22,6 +27,14 @@ export default function IconRail() {
             href={it.href}
             title={it.label}
             aria-label={it.label}
+            onClick={
+              active && onToggleActive
+                ? (e) => {
+                    e.preventDefault();
+                    onToggleActive();
+                  }
+                : undefined
+            }
             className={[
               "grid h-10 w-10 place-items-center rounded-lg transition",
               active

@@ -173,6 +173,7 @@ export default function BuildopApp() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [mapFilter, setMapFilter] = useState("all");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [favList, setFavList] = usePersistentState<string[]>("buildop:favorites", []);
   const [favOnly, setFavOnly] = usePersistentState<boolean>("buildop:favOnly", false);
@@ -287,13 +288,11 @@ export default function BuildopApp() {
 
   const selected = selectedId ? filtered.find((i) => i.id === selectedId) : undefined;
 
-  // Auto-select the most imminent item once the clock is live.
-  useEffect(() => {
-    if (ready && selectedId === null && items.length) {
-      const first = items.find((i) => i.active) ?? items[0];
-      setSelectedId(first.id);
-    }
-  }, [ready, items, selectedId]);
+  // Selecting an item only opens/closes its card — it never touches the list.
+  // The list is toggled solely by the rail icon (onToggleActive).
+  const toggleSelect = (id: string) =>
+    setSelectedId((prev) => (prev === id ? null : id));
+  const closeCard = () => setSelectedId(null);
 
   const markers: MapMarker[] = filtered.map((i) => ({
     id: i.id,
@@ -337,7 +336,7 @@ export default function BuildopApp() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0a0a0f] text-white">
       {/* ---------------------------- top bar ---------------------------- */}
-      <header className="relative flex h-14 shrink-0 items-center gap-4 border-b border-white/10 bg-[#0d0d14] px-4">
+      <header className="relative flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-[#0d0d14] px-3 sm:gap-4 sm:px-4">
         <div className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 text-black">
             <Icon path={P.bolt} className="h-5 w-5" />
@@ -431,11 +430,23 @@ export default function BuildopApp() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <IconRail />
+      <div className="relative flex min-h-0 flex-1">
+        <IconRail onToggleActive={() => setSidebarOpen((o) => !o)} />
 
         {/* --------------------------- sidebar --------------------------- */}
-        <aside className="flex w-[340px] shrink-0 flex-col border-r border-white/10 bg-[#0b0b11]">
+        {/* Mobile: full-height panel (beside the rail), shown until you pick an
+            item; selecting hides it to reveal the map, closing the card brings it
+            back. Desktop: always-visible static left column. */}
+        <aside
+          className={[
+            "flex-col bg-[#0b0b11]",
+            // mobile overlay (full height, to the right of the icon rail)
+            "absolute inset-y-0 left-14 right-0 z-[1200] border-l border-white/10 shadow-2xl",
+            // desktop static column
+            "lg:static lg:inset-auto lg:left-auto lg:right-auto lg:z-auto lg:w-[340px] lg:shrink-0 lg:border-l-0 lg:border-r lg:shadow-none",
+            sidebarOpen ? "flex" : "hidden",
+          ].join(" ")}
+        >
           <div className="shrink-0 space-y-3 p-3">
             <div>
               <h1 className="text-sm font-bold text-white">GW2 Event &amp; Boss Timer</h1>
@@ -504,7 +515,7 @@ export default function BuildopApp() {
                   selected={i.id === selected?.id}
                   favorite={favorites.has(i.id)}
                   ready={ready}
-                  onSelect={() => setSelectedId(i.id)}
+                  onSelect={() => toggleSelect(i.id)}
                   onToggleFavorite={() => toggleFavorite(i.id)}
                 />
               ))}
@@ -521,7 +532,7 @@ export default function BuildopApp() {
             markers={markers}
             selectedId={selected?.id ?? ""}
             highlight={highlight}
-            onSelect={setSelectedId}
+            onSelect={toggleSelect}
           />
 
           {/* legend */}
@@ -536,7 +547,7 @@ export default function BuildopApp() {
 
           {/* info panel */}
           {selected && (
-            <div className="absolute bottom-3 left-3 z-[1000] flex max-h-[calc(100%-1.5rem)] w-80 flex-col rounded-xl border border-white/10 bg-[#0d0d14]/95 shadow-2xl backdrop-blur">
+            <div className="absolute bottom-3 left-3 right-3 z-[1000] flex max-h-[calc(100%-1.5rem)] flex-col rounded-xl border border-white/10 bg-[#0d0d14]/95 shadow-2xl backdrop-blur sm:right-auto sm:w-80">
               <div className="flex items-start gap-2 border-b border-white/10 p-3">
                 <span className="mt-0.5 text-orange-400"><Icon path={P.pin} className="h-4 w-4" /></span>
                 <div className="min-w-0 flex-1">
@@ -565,7 +576,7 @@ export default function BuildopApp() {
                 <button onClick={() => toggleFavorite(selected.id)} className={favorites.has(selected.id) ? "text-amber-400" : "text-white/30 hover:text-white/70"} aria-label="Favorite">
                   <Icon path={P.star} className="h-4 w-4" fill={favorites.has(selected.id) ? "currentColor" : "none"} />
                 </button>
-                <button onClick={() => setSelectedId(null)} className="text-white/40 hover:text-white" aria-label="Close">
+                <button onClick={closeCard} className="text-white/40 hover:text-white" aria-label="Close">
                   <Icon path={P.close} className="h-4 w-4" />
                 </button>
               </div>
