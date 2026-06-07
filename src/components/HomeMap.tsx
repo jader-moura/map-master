@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { CRS, DomEvent, Icon as LeafletIcon, type LatLng } from "leaflet";
 import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -103,11 +103,23 @@ function PoiMarkers({
   icons: Record<PoiKind, LeafletIcon>;
 }) {
   const map = useMap();
-  const [zoom, setZoom] = useState(() => map.getZoom());
+  // Force a re-render on every relevant map event. We read zoom/bounds *fresh* at
+  // render time, so a plain version counter is enough — and unlike storing the
+  // zoom value, it re-renders even when the zoom number is unchanged (e.g. a pan,
+  // or the very first layout pass once the container has a real size).
+  const [, bump] = useReducer((n: number) => n + 1, 0);
   useMapEvents({
-    zoomend: () => setZoom(map.getZoom()),
-    moveend: () => setZoom(map.getZoom()), // re-render on pan to refresh the cull
+    zoomend: bump,
+    moveend: bump, // pan → refresh the viewport cull
+    resize: bump, // container got its real size
   });
+  // On mount the map may not be measured yet (it's a dynamic, client-only import),
+  // so getBounds() can be empty and cull everything. Re-render once it's ready.
+  useEffect(() => {
+    map.whenReady(() => bump());
+  }, [map]);
+
+  const zoom = map.getZoom();
 
   // Precompute leaflet positions once per dataset (unproject is a pure fn).
   const prepared = useMemo(
