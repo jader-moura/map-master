@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/", path: P.home, label: "Map" },
   { href: "/bosses", path: P.swords, label: "Event & boss timers" },
   { href: "/timeline", path: P.clock, label: "Event timeline" },
+  { href: "/gather", path: P.pickaxe, label: "Gathering map" },
   { href: "/market", path: P.coins, label: "Trading Post & materials" },
 ];
 
