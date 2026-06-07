@@ -25,17 +25,20 @@ const R = "https://render.guildwars2.com/file";
 const GREEN_PORTAL_ICON =
   "https://wiki.guildwars2.com/images/1/1b/Personal_Story_Portal_%28map_icon%29.png";
 
+// `minZoom` gates each kind to a zoom level, like the in-game map: far out you
+// only see waypoints/portals; the denser, smaller icons reveal as you zoom in.
+// This keeps the rendered marker count low at wide zoom. (map min 2, max 7)
 export const POI_META: Record<
   PoiKind,
-  { label: string; iconUrl: string; size: number; defaultOn: boolean }
+  { label: string; iconUrl: string; size: number; defaultOn: boolean; minZoom: number }
 > = {
-  waypoint: { label: "Waypoints", iconUrl: `${R}/32633AF8ADEA696A1EF56D3AE32D617B10D3AC57/157353.png`, size: 22, defaultOn: true },
-  travel: { label: "Map Portals", iconUrl: GREEN_PORTAL_ICON, size: 22, defaultOn: true },
-  portal: { label: "Dungeons & Fractals", iconUrl: `${R}/943538394A94A491C8632FBEF6203C2013443555/102478.png`, size: 22, defaultOn: true },
-  vista: { label: "Vistas", iconUrl: `${R}/A2C16AF497BA3A0903A0499FFBAF531477566F10/358415.png`, size: 20, defaultOn: true },
-  heart: { label: "Renown Hearts", iconUrl: `${R}/B3DEEC72BBEF0C6FC6FEF835A0E275FCB1151BB7/102439.png`, size: 20, defaultOn: true },
-  hero: { label: "Hero Challenges", iconUrl: `${R}/B4EC6BB3FDBC42557C3CAE0CAA9E57EBF9E462E3/156626.png`, size: 20, defaultOn: true },
-  landmark: { label: "Points of Interest", iconUrl: `${R}/25B230711176AB5728E86F5FC5F0BFAE48B32F6E/97461.png`, size: 18, defaultOn: false },
+  waypoint: { label: "Waypoints", iconUrl: `${R}/32633AF8ADEA696A1EF56D3AE32D617B10D3AC57/157353.png`, size: 22, defaultOn: true, minZoom: 2 },
+  travel: { label: "Map Portals", iconUrl: GREEN_PORTAL_ICON, size: 22, defaultOn: true, minZoom: 2 },
+  portal: { label: "Dungeons & Fractals", iconUrl: `${R}/943538394A94A491C8632FBEF6203C2013443555/102478.png`, size: 22, defaultOn: true, minZoom: 3 },
+  vista: { label: "Vistas", iconUrl: `${R}/A2C16AF497BA3A0903A0499FFBAF531477566F10/358415.png`, size: 20, defaultOn: true, minZoom: 3 },
+  heart: { label: "Renown Hearts", iconUrl: `${R}/B3DEEC72BBEF0C6FC6FEF835A0E275FCB1151BB7/102439.png`, size: 20, defaultOn: true, minZoom: 3 },
+  hero: { label: "Hero Challenges", iconUrl: `${R}/B4EC6BB3FDBC42557C3CAE0CAA9E57EBF9E462E3/156626.png`, size: 20, defaultOn: true, minZoom: 3 },
+  landmark: { label: "Points of Interest", iconUrl: `${R}/25B230711176AB5728E86F5FC5F0BFAE48B32F6E/97461.png`, size: 18, defaultOn: false, minZoom: 3 },
 };
 
 // Curated green map-transition portals. These are NOT in the GW2 API, so the

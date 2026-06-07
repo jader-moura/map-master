@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { CRS, DomEvent, Icon as LeafletIcon } from "leaflet";
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { CRS, DomEvent, Icon as LeafletIcon, type LatLng } from "leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { unproject, TILE_URL, TYRIA_BOUNDS, MAX_ZOOM } from "@/lib/gw2/mapTiles";
 import { POI_META, POI_KINDS, type PoiData, type PoiKind } from "@/lib/gw2/pois";
@@ -74,6 +74,96 @@ function RegionJump() {
   );
 }
 
+// While searching we drop the zoom gate + viewport cull so you can locate things
+// anywhere, but cap the rendered count to keep the DOM bounded on broad queries.
+const SEARCH_CAP = 500;
+
+// Declutter grid: collapse markers of the same kind that land within this many
+// screen pixels of each other into a single representative. Because we project at
+// the *current* zoom, the same world cell covers fewer real markers as you zoom
+// in — so points fan out gradually instead of appearing all at once.
+const DECLUTTER_PX = 52;
+// Only thin at very low zoom; once zoomed in past this the viewport is small
+// enough that culling alone keeps it light, so we show every marker.
+const DECLUTTER_MAX_ZOOM = 3;
+
+// Renders only the markers that should be visible *right now*: gated by zoom per
+// kind and culled to the current viewport. Lives inside MapContainer so it can
+// react to pan/zoom via the live map instance — this is what keeps the map fast
+// even though the full dataset is thousands of points.
+function PoiMarkers({
+  data,
+  visible,
+  query,
+  icons,
+}: {
+  data: PoiData;
+  visible: Record<PoiKind, boolean>;
+  query: string;
+  icons: Record<PoiKind, LeafletIcon>;
+}) {
+  const map = useMap();
+  const [zoom, setZoom] = useState(() => map.getZoom());
+  useMapEvents({
+    zoomend: () => setZoom(map.getZoom()),
+    moveend: () => setZoom(map.getZoom()), // re-render on pan to refresh the cull
+  });
+
+  // Precompute leaflet positions once per dataset (unproject is a pure fn).
+  const prepared = useMemo(
+    () =>
+      Object.fromEntries(
+        POI_KINDS.map((kind) => [
+          kind,
+          data[kind].map((m) => ({ m, pos: unproject(m.coord) as LatLng })),
+        ]),
+      ) as Record<PoiKind, { m: PoiData[PoiKind][number]; pos: LatLng }[]>,
+    [data],
+  );
+
+  const q = query.trim().toLowerCase();
+  const bounds = map.getBounds().pad(0.25); // small margin so edges don't pop
+  const declutter = !q && zoom <= DECLUTTER_MAX_ZOOM;
+
+  const out: ReactNode[] = [];
+  let searchCount = 0;
+  for (const kind of POI_KINDS) {
+    if (!visible[kind]) continue;
+    if (!q && zoom < POI_META[kind].minZoom) continue;
+    const label = POI_META[kind].label.replace(/s$/, "");
+    const list = prepared[kind];
+    // One declutter grid per kind so layers thin independently of each other.
+    const occupied = declutter ? new Set<string>() : null;
+    for (let i = 0; i < list.length; i++) {
+      const { m, pos } = list[i];
+      if (q) {
+        if (!m.name.toLowerCase().includes(q)) continue;
+        if (searchCount >= SEARCH_CAP) break;
+        searchCount++;
+      } else {
+        if (!bounds.contains(pos)) continue;
+        if (occupied) {
+          // Project to pixel space at the current zoom, keep one marker per cell.
+          const p = map.project(pos, zoom);
+          const cell = `${Math.floor(p.x / DECLUTTER_PX)}:${Math.floor(p.y / DECLUTTER_PX)}`;
+          if (occupied.has(cell)) continue;
+          occupied.add(cell);
+        }
+      }
+      out.push(
+        <Marker key={`${kind}-${i}`} position={pos} icon={icons[kind]}>
+          <Tooltip direction="top">
+            <span className="font-semibold">{m.name}</span>
+            <br />
+            <span className="opacity-60">{label}</span>
+          </Tooltip>
+        </Marker>,
+      );
+    }
+  }
+  return <>{out}</>;
+}
+
 export default function HomeMap({
   data,
   visible,
@@ -83,8 +173,6 @@ export default function HomeMap({
   visible: Record<PoiKind, boolean>;
   query: string;
 }) {
-  const q = query.trim().toLowerCase();
-
   // Build one Leaflet icon per kind, reused across all of its markers.
   const icons = useMemo(
     () =>
@@ -117,21 +205,7 @@ export default function HomeMap({
       className="h-full min-h-[360px] w-full"
     >
       <TileLayer url={TILE_URL} noWrap minZoom={1} maxZoom={MAX_ZOOM} />
-      {POI_KINDS.map((kind) => {
-        if (!visible[kind]) return null;
-        const markers = q
-          ? data[kind].filter((m) => m.name.toLowerCase().includes(q))
-          : data[kind];
-        return markers.map((m, i) => (
-          <Marker key={`${kind}-${i}`} position={unproject(m.coord)} icon={icons[kind]}>
-            <Tooltip direction="top">
-              <span className="font-semibold">{m.name}</span>
-              <br />
-              <span className="opacity-60">{POI_META[kind].label.replace(/s$/, "")}</span>
-            </Tooltip>
-          </Marker>
-        ));
-      })}
+      <PoiMarkers data={data} visible={visible} query={query} icons={icons} />
       <RegionJump />
     </MapContainer>
   );
