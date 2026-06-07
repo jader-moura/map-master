@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import MarketView from "@/components/MarketView";
 
 export const metadata: Metadata = {
-  title: "GW2 Trading Post Prices — Gems, Ectos & T6 Materials",
+  title: "GW2 Trading Post Prices — Gems, Ectos & Gathering Materials",
   description:
-    "Live Guild Wars 2 Trading Post prices: gem-to-gold exchange rate plus current buy/sell prices for Glob of Ectoplasm, Mystic Coins and T6 crafting materials.",
+    "Live Guild Wars 2 Trading Post prices: gem-to-gold exchange rate, key items like Glob of Ectoplasm and Mystic Coins, plus gathering materials — every wood, ore and plant tier.",
   alternates: { canonical: "/market" },
   openGraph: {
-    title: "GW2 Trading Post Prices — Gems, Ectos & T6 Materials",
-    description: "Live gem exchange rate and key Guild Wars 2 item prices.",
+    title: "GW2 Trading Post Prices — Gems, Ectos & Gathering Materials",
+    description:
+      "Live gem exchange rate, key item prices and gathering material prices for Guild Wars 2.",
     url: "https://buildop.app/market",
   },
 };

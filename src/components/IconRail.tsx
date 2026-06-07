@@ -8,7 +8,7 @@ const LINKS = [
   { href: "/", path: P.home, label: "Map" },
   { href: "/bosses", path: P.swords, label: "Event & boss timers" },
   { href: "/timeline", path: P.clock, label: "Event timeline" },
-  { href: "/market", path: P.coins, label: "Trading Post prices" },
+  { href: "/market", path: P.coins, label: "Trading Post & materials" },
 ];
 
 export default function IconRail({

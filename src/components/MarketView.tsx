@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import IconRail from "@/components/IconRail";
 import { Icon, P } from "@/components/icons";
+import { Coins } from "@/components/Coins";
+import MaterialsSection from "@/components/MaterialsSection";
 
 type Market = {
   exchange: { buy100Gems: number; sell100Gems: number };
@@ -10,44 +13,14 @@ type Market = {
   updated: number;
 };
 
-const COIN = {
-  gold: "https://wiki.guildwars2.com/images/d/d1/Gold_coin.png",
-  silver: "https://wiki.guildwars2.com/images/3/3c/Silver_coin.png",
-  copper: "https://wiki.guildwars2.com/images/e/eb/Copper_coin.png",
-};
-
-function CoinIcon({ src, alt }: { src: string; alt: string }) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={alt} className="h-[14px] w-[14px]" />;
-}
-
-function Coins({ value }: { value: number }) {
-  const g = Math.floor(value / 10000);
-  const s = Math.floor((value % 10000) / 100);
-  const c = value % 100;
-  return (
-    <span className="inline-flex items-center gap-1 font-mono tabular-nums text-white">
-      {g > 0 && (
-        <span className="inline-flex items-center gap-0.5">
-          {g}
-          <CoinIcon src={COIN.gold} alt="gold" />
-        </span>
-      )}
-      {(g > 0 || s > 0) && (
-        <span className="inline-flex items-center gap-0.5">
-          {s}
-          <CoinIcon src={COIN.silver} alt="silver" />
-        </span>
-      )}
-      <span className="inline-flex items-center gap-0.5">
-        {c}
-        <CoinIcon src={COIN.copper} alt="copper" />
-      </span>
-    </span>
-  );
-}
+const TABS = [
+  { key: "post" as const, label: "Trading Post", icon: P.coins },
+  { key: "materials" as const, label: "Materials", icon: P.pickaxe },
+];
 
 export default function MarketView() {
+  const [tab, setTab] = useState<"post" | "materials">("post");
+
   const { data, isLoading, isError } = useQuery<Market>({
     queryKey: ["market"],
     queryFn: async () => {
@@ -78,21 +51,44 @@ export default function MarketView() {
 
         <main className="scroll-themed min-w-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-            <header className="mb-6">
+            <header className="mb-5">
               <h1 className="text-2xl font-bold text-white">Guild Wars 2 Trading Post Prices</h1>
               <p className="mt-1 text-sm text-white/50">
-                Live gem exchange and key item prices · auto-updates every 2 minutes
+                Live gem exchange, key items &amp; gathering materials · auto-updates every 2 minutes
               </p>
             </header>
 
-            {isError && (
-              <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                Couldn’t load market data right now. Try again shortly.
-              </p>
-            )}
+            {/* Tabs */}
+            <div className="mb-6 flex gap-1.5">
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={[
+                    "flex items-center gap-2 rounded-lg border px-3.5 py-1.5 text-sm font-medium transition",
+                    tab === t.key
+                      ? "border-orange-500/40 bg-orange-500/15 text-orange-300"
+                      : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10",
+                  ].join(" ")}
+                >
+                  <Icon path={t.icon} className="h-4 w-4" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-            {/* Gem exchange */}
-            <section className="mb-6 grid gap-3 sm:grid-cols-2">
+            {tab === "materials" ? (
+              <MaterialsSection />
+            ) : (
+              <>
+                {isError && (
+                  <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    Couldn’t load market data right now. Try again shortly.
+                  </p>
+                )}
+
+                {/* Gem exchange */}
+                <section className="mb-6 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-white/10 bg-[#0d0d14] p-4">
                 <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/40">
                   <Icon path={P.coins} className="h-4 w-4" /> Buy 100 gems
@@ -148,7 +144,9 @@ export default function MarketView() {
                       </span>
                     </div>
                   ))}
-            </section>
+                </section>
+              </>
+            )}
 
             <p className="mt-6 text-xs text-white/35">
               Prices from the official Guild Wars 2 Trading Post API. For reference only.
