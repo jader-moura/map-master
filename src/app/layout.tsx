@@ -109,6 +109,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="h-full overflow-hidden" suppressHydrationWarning>
+        {/* Warm up connections to the CDNs the client loads directly (map tiles +
+            icons/images), so the first tile and POI icons paint sooner (LCP/CWV). */}
+        <link rel="preconnect" href="https://tiles.guildwars2.com" />
+        <link rel="preconnect" href="https://render.guildwars2.com" />
+        <link rel="preconnect" href="https://wiki.guildwars2.com" />
+        <link rel="dns-prefetch" href="https://tiles.guildwars2.com" />
+        <link rel="dns-prefetch" href="https://render.guildwars2.com" />
+        <link rel="dns-prefetch" href="https://wiki.guildwars2.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import TimelineView from "@/components/TimelineView";
 import { SeoModal } from "@/components/seo/SeoModal";
 
@@ -53,8 +54,12 @@ export default function TimelinePage() {
             </p>
             <p>
               Times come from the official GW2 wiki event-timer data and display in your local
-              timezone. Use the boss timer for a focused world-boss countdown, or this timeline
-              for the full picture across the day.
+              timezone. Use the{" "}
+              <Link href="/gw2-world-boss-timer" className="text-orange-400 hover:underline">
+                boss timer
+              </Link>{" "}
+              for a focused world-boss countdown, or this timeline for the full picture across
+              the day.
             </p>
           </>
         }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import MarketView from "@/components/MarketView";
 import { SeoModal } from "@/components/seo/SeoModal";
 
@@ -54,7 +55,11 @@ export default function MarketPage() {
             </p>
             <p>
               Use the Materials tab to compare wood, ore and plant prices when deciding what to
-              gather, then jump to the gathering map to find where to farm it.
+              gather, then jump to the{" "}
+              <Link href="/gw2-gathering-map" className="text-orange-400 hover:underline">
+                gathering map
+              </Link>{" "}
+              to find where to farm it.
             </p>
           </>
         }
