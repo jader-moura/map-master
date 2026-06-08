@@ -107,9 +107,9 @@ export default function GatherView() {
         >
           <div className="shrink-0 space-y-2 p-3">
             <div>
-              <h1 className="text-sm font-bold text-white">Where to gather</h1>
+              <h1 className="text-sm font-bold text-white">GW2 Gathering Map</h1>
               <p className="text-[11px] text-white/45">
-                Pick a material — the maps where you gather it light up on Tyria.
+                Pick a material, the maps where you gather it light up on Tyria.
               </p>
             </div>
             {selectedId != null && (

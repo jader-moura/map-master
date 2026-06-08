@@ -90,9 +90,9 @@ export default function TimelineView() {
             <Icon path={P.bolt} className="h-5 w-5" />
           </span>
           <span className="text-base font-bold tracking-tight">buildop</span>
-          <span className="ml-1 hidden rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/60 sm:inline">
-            Event Timers
-          </span>
+          <h1 className="ml-1 hidden rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs font-normal text-white/60 sm:inline">
+            GW2 Event Timer
+          </h1>
         </div>
         <div className="ml-auto flex items-center gap-2 text-xs text-white/50">
           <span className="hidden sm:inline">3-hour window · red line = now</span>

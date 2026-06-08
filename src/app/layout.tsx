@@ -4,6 +4,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import QueryProvider from "@/components/QueryProvider";
+import { SeoModalProvider } from "@/components/seo/SeoModalContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://buildop.app";
-const TITLE = "buildop — Guild Wars 2 Map & World Boss Timer";
+const TITLE = "buildop | Guild Wars 2 Map & World Boss Timer";
 const DESCRIPTION =
   "buildop is a free Guild Wars 2 companion: a live world boss timer with countdowns and spawn alerts, plus an interactive Tyria map showing waypoints, vistas, points of interest, renown hearts, hero challenges and portals.";
 
@@ -112,7 +113,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <SeoModalProvider>{children}</SeoModalProvider>
+        </QueryProvider>
         <Analytics />
         <SpeedInsights />
       </body>

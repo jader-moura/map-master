@@ -359,7 +359,7 @@ export default function BuildopApp() {
           )}
           <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">
             <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            <span className="text-xs font-semibold text-white">{ready ? activeCount : "—"} active</span>
+            <span className="text-xs font-semibold text-white">{ready ? activeCount : "-"} active</span>
           </div>
           <div className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-white/70 sm:block">
             {local} <span className="text-white/40">{utc} UTC</span>
@@ -449,7 +449,7 @@ export default function BuildopApp() {
         >
           <div className="shrink-0 space-y-3 p-3">
             <div>
-              <h1 className="text-sm font-bold text-white">GW2 Event &amp; Boss Timer</h1>
+              <h1 className="text-sm font-bold text-white">GW2 World Boss Timer</h1>
               <p className="text-[11px] text-white/45">
                 World bosses + map meta events · sorted by what&apos;s next
               </p>

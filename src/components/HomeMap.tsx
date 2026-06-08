@@ -41,7 +41,7 @@ function RegionJump() {
             }}
             className="mb-1 block w-full rounded px-2.5 py-1.5 text-left text-sm font-medium text-white/90 hover:bg-white/10"
           >
-            Tyria — full map
+            Tyria, full map
           </button>
           {REGION_GROUPS.map((group) => (
             <div key={group.label} className="mb-1">

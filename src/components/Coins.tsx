@@ -13,7 +13,7 @@ function CoinIcon({ src, alt }: { src: string; alt: string }) {
 }
 
 export function Coins({ value }: { value: number }) {
-  if (!value) return <span className="font-mono text-white/30">—</span>;
+  if (!value) return <span className="font-mono text-white/30">-</span>;
   const g = Math.floor(value / 10000);
   const s = Math.floor((value % 10000) / 100);
   const c = value % 100;

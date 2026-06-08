@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, P } from "@/components/icons";
+import { useSeoModal } from "@/components/seo/SeoModalContext";
 
 const LINKS = [
   { href: "/", path: P.home, label: "Map" },
@@ -19,6 +20,7 @@ export default function IconRail({
   onToggleActive?: () => void;
 }) {
   const pathname = usePathname();
+  const seo = useSeoModal();
   return (
     <nav className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-white/10 bg-[#0d0d14] py-3">
       {LINKS.map((it) => {
@@ -48,12 +50,15 @@ export default function IconRail({
           </Link>
         );
       })}
-      <span
-        className="mt-auto grid h-10 w-10 cursor-default place-items-center rounded-lg text-white/25"
-        title="More coming soon"
+      <button
+        type="button"
+        onClick={() => seo?.setOpen(true)}
+        title="About this page & FAQ"
+        aria-label="About this page & FAQ"
+        className="mt-auto grid h-10 w-10 place-items-center rounded-lg text-white/40 transition hover:bg-white/5 hover:text-white"
       >
         <Icon path={P.info} />
-      </span>
+      </button>
     </nav>
   );
 }

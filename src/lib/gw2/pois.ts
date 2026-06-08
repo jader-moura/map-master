@@ -46,8 +46,8 @@ export const POI_META: Record<
 // /v2/continents/1/floors/1. The asura gate network links the six capital
 // cities through Lion's Arch's Gate Hub Plaza. Extend this list as needed.
 export const TRAVEL_PORTALS: PoiMarker[] = [
-  { name: "Gate Hub Plaza — asura gates to all capitals", coord: [49309.1, 31222.8] }, // Lion's Arch
-  { name: "Mist Portals — Fractals & WvW", coord: [49399.2, 31822.6] }, // Lion's Arch
+  { name: "Gate Hub Plaza, asura gates to all capitals", coord: [49309.1, 31222.8] }, // Lion's Arch
+  { name: "Mist Portals, Fractals & WvW", coord: [49399.2, 31822.6] }, // Lion's Arch
   { name: "Asura gate to Lion's Arch", coord: [44266.4, 26928.4] }, // Divinity's Reach
   { name: "Asura gate to Lion's Arch", coord: [53676.8, 30665.0] }, // Hoelbrak
   { name: "Asura gate to Lion's Arch", coord: [57089.0, 30642.5] }, // Black Citadel

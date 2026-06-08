@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "buildop — Guild Wars 2 Map & World Boss Timer",
+    name: "buildop | Guild Wars 2 Map & World Boss Timer",
     short_name: "buildop",
     description:
       "A free Guild Wars 2 companion: live world boss timer and an interactive Tyria map.",
