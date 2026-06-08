@@ -6,10 +6,10 @@ import { Icon, P } from "@/components/icons";
 
 const LINKS = [
   { href: "/", path: P.home, label: "Map" },
-  { href: "/bosses", path: P.swords, label: "Event & boss timers" },
-  { href: "/timeline", path: P.clock, label: "Event timeline" },
-  { href: "/gather", path: P.pickaxe, label: "Gathering map" },
-  { href: "/market", path: P.coins, label: "Trading Post & materials" },
+  { href: "/gw2-world-boss-timer", path: P.swords, label: "Event & boss timers" },
+  { href: "/gw2-event-timer", path: P.clock, label: "Event timeline" },
+  { href: "/gw2-gathering-map", path: P.pickaxe, label: "Gathering map" },
+  { href: "/gw2-trading-post", path: P.coins, label: "Trading Post & materials" },
 ];
 
 export default function IconRail({

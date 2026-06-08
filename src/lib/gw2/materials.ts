@@ -5,7 +5,7 @@
 //
 // `levels` is the area (map) level range where that tier is gathered, taken
 // from the GW2 wiki node pages (e.g. Mithril Ore node = "level 70-80 areas").
-// The /gather map highlights open-world maps whose level range overlaps this.
+// The /gw2-gathering-map highlights open-world maps whose level range overlaps this.
 // Foraged plants aren't strictly level-gated, so their ranges are approximate.
 
 export type MatCategoryKey = "wood" | "ore" | "plant";
