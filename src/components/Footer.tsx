@@ -33,7 +33,25 @@ export default function Footer() {
           ))}
         </nav>
       </div>
-      <p className="mx-auto mt-8 max-w-5xl text-xs leading-relaxed text-white/30">
+      <nav
+        aria-label="Site"
+        className="mx-auto mt-8 flex max-w-5xl flex-wrap gap-x-5 gap-y-2 text-xs text-white/45"
+      >
+        <Link href="/about" className="transition hover:text-orange-400">
+          About
+        </Link>
+        <Link href="/privacy" className="transition hover:text-orange-400">
+          Privacy
+        </Link>
+        <Link href="/terms" className="transition hover:text-orange-400">
+          Terms
+        </Link>
+        <Link href="/contact" className="transition hover:text-orange-400">
+          Contact
+        </Link>
+      </nav>
+
+      <p className="mx-auto mt-4 max-w-5xl text-xs leading-relaxed text-white/30">
         buildop is a fan-made project and is not affiliated with or endorsed by ArenaNet.
         Guild Wars 2 and all related logos and names are trademarks of ArenaNet, LLC.
       </p>
