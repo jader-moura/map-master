@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
-import { TRAVEL_PORTALS, type PoiData, type PoiKind } from "@/lib/gw2/pois";
+import {
+  TRAVEL_PORTALS,
+  MASTERY_ICONS,
+  MASTERY_ICON_FALLBACK,
+  type PoiData,
+  type PoiKind,
+} from "@/lib/gw2/pois";
 
 // Continent 1 spreads its maps across many floors. Floor 1 is the base floor and
 // covers central Tyria + Heart of Maguuma + Cantha + Janthir + Horn of Maguuma +
@@ -13,10 +19,12 @@ const floorUrl = (f: number) =>
 type RawPoi = { name?: string; type: string; coord: [number, number] };
 type RawTask = { objective?: string; coord: [number, number] };
 type RawHero = { coord: [number, number] };
+type RawMastery = { coord: [number, number]; region?: string };
 type RawMap = {
   points_of_interest?: Record<string, RawPoi>;
   tasks?: Record<string, RawTask>;
   skill_challenges?: RawHero[];
+  mastery_points?: RawMastery[];
 };
 type RawFloor = { regions: Record<string, { maps: Record<string, RawMap> }> };
 
@@ -25,16 +33,21 @@ type RawFloor = { regions: Record<string, { maps: Record<string, RawMap> }> };
 // on a cache miss (weekly).
 const getPois = unstable_cache(
   async (): Promise<PoiData> => {
-    const data: PoiData = { waypoint: [], travel: TRAVEL_PORTALS, portal: [], vista: [], heart: [], hero: [], landmark: [] };
+    const data: PoiData = { waypoint: [], travel: TRAVEL_PORTALS, portal: [], vista: [], heart: [], hero: [], mastery: [], landmark: [] };
 
     // Dedup markers by rounded coordinate — a map can appear (populated) on more
     // than one floor, and distinct POIs never share the same coordinate.
     const seen = new Set<string>();
-    const add = (bucket: PoiData[PoiKind], name: string, coord: [number, number]) => {
+    const add = (
+      bucket: PoiData[PoiKind],
+      name: string,
+      coord: [number, number],
+      icon?: string,
+    ) => {
       const key = `${Math.round(coord[0])},${Math.round(coord[1])}`;
       if (seen.has(key)) return;
       seen.add(key);
-      bucket.push({ name, coord });
+      bucket.push(icon ? { name, coord, icon } : { name, coord });
     };
 
     for (const f of FLOORS) {
@@ -60,12 +73,21 @@ const getPois = unstable_cache(
           for (const hero of map.skill_challenges ?? []) {
             if (hero.coord) add(data.hero, "Hero Challenge", hero.coord);
           }
+          for (const mp of map.mastery_points ?? []) {
+            if (mp.coord)
+              add(
+                data.mastery,
+                "Mastery Insight",
+                mp.coord,
+                (mp.region && MASTERY_ICONS[mp.region]) || MASTERY_ICON_FALLBACK,
+              );
+          }
         }
       }
     }
     return data;
   },
-  ["gw2-pois-c1-v3"],
+  ["gw2-pois-c1-v4"],
   { revalidate: 60 * 60 * 24 * 7 }, // refresh weekly
 );
 

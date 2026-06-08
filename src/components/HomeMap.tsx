@@ -87,6 +87,24 @@ const DECLUTTER_PX = 52;
 // enough that culling alone keeps it light, so we show every marker.
 const DECLUTTER_MAX_ZOOM = 3;
 
+// Per-marker icon cache (used by mastery points, whose icon varies by region).
+// Keyed by URL and reused across renders so we build each Leaflet icon once.
+const customIconCache = new Map<string, LeafletIcon>();
+function customIcon(url: string) {
+  let ic = customIconCache.get(url);
+  if (!ic) {
+    ic = new LeafletIcon({
+      iconUrl: url,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+      tooltipAnchor: [0, -10],
+      className: "gw2-poi-icon",
+    });
+    customIconCache.set(url, ic);
+  }
+  return ic;
+}
+
 // Renders only the markers that should be visible *right now*: gated by zoom per
 // kind and culled to the current viewport. Lives inside MapContainer so it can
 // react to pan/zoom via the live map instance — this is what keeps the map fast
@@ -163,7 +181,7 @@ function PoiMarkers({
         }
       }
       out.push(
-        <Marker key={`${kind}-${i}`} position={pos} icon={icons[kind]}>
+        <Marker key={`${kind}-${i}`} position={pos} icon={m.icon ? customIcon(m.icon) : icons[kind]}>
           <Tooltip direction="top">
             <span className="font-semibold">{m.name}</span>
             <br />
