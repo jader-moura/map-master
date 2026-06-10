@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/gw2-event-timer", path: P.clock, label: "Event timeline" },
   { href: "/gw2-gathering-map", path: P.pickaxe, label: "Gathering map" },
   { href: "/gw2-trading-post", path: P.coins, label: "Trading Post & materials" },
+  { href: "/gw2/items", path: P.list, label: "Item database" },
 ];
 
 // Secondary, lower-priority links shown at the very bottom of the rail, set apart

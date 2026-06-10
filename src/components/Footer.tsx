@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/gw2-event-timer", label: "GW2 Event Timer" },
   { href: "/gw2-gathering-map", label: "GW2 Gathering Map" },
   { href: "/gw2-trading-post", label: "GW2 Trading Post Prices" },
+  { href: "/gw2/items", label: "GW2 Item Database" },
 ];
 
 export default function Footer() {
