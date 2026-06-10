@@ -52,8 +52,19 @@ export default function Footer() {
       </nav>
 
       <p className="mx-auto mt-4 max-w-5xl text-xs leading-relaxed text-white/30">
-        buildop is a fan-made project and is not affiliated with or endorsed by ArenaNet.
-        Guild Wars 2 and all related logos and names are trademarks of ArenaNet, LLC.
+        buildop is a fan-made project and is not affiliated with or endorsed by ArenaNet. Game data,
+        icons and map tiles are provided by the official{" "}
+        <a
+          href="https://api.guildwars2.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-white/20 transition hover:text-orange-400"
+        >
+          Guild Wars 2 API
+        </a>
+        . &copy; 2012-2026 ArenaNet, LLC. All rights reserved. Guild Wars, Guild Wars 2 and all
+        associated logos, designs and names are trademarks or registered trademarks of NCSOFT
+        Corporation. See our <Link href="/terms">Terms</Link> for full attribution.
       </p>
     </footer>
   );

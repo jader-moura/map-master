@@ -44,9 +44,12 @@ export default function AboutPage() {
 
       <h2>Where the data comes from</h2>
       <p>
-        Game data is sourced from the official Guild Wars 2 API (api.guildwars2.com) and the Guild
-        Wars 2 Wiki, refreshed regularly. Map tiles and icons are loaded from ArenaNet&apos;s
-        official servers.
+        Game data, item icons and map tiles are sourced from the official{" "}
+        <a href="https://api.guildwars2.com" target="_blank" rel="noopener noreferrer">
+          Guild Wars 2 API
+        </a>{" "}
+        (api.guildwars2.com) and ArenaNet&apos;s official servers, refreshed regularly. See our{" "}
+        <Link href="/terms">Terms</Link> for the full attribution notice.
       </p>
 
       <h2>Who makes it</h2>

@@ -46,10 +46,25 @@ export default function TermsPage() {
         terms.
       </p>
 
+      <h2>Game data and attribution</h2>
+      <p>
+        Game data, item icons and map tiles shown on buildop are provided by the official{" "}
+        <a href="https://api.guildwars2.com" target="_blank" rel="noopener noreferrer">
+          Guild Wars 2 API
+        </a>{" "}
+        and are used in accordance with ArenaNet&apos;s Content Terms of Use. That content remains
+        the property of its respective owners and is not ours to license.
+      </p>
+      <p>
+        &copy; 2012-2026 ArenaNet, LLC. All rights reserved. NCSOFT, the interlocking NC logo,
+        ArenaNet, Guild Wars, Guild Wars 2 and all associated logos, designs and composite marks are
+        trademarks or registered trademarks of NCSOFT Corporation.
+      </p>
+
       <h2>Not affiliated with ArenaNet</h2>
       <p>
-        buildop is a fan-made project and is not affiliated with or endorsed by ArenaNet. Guild
-        Wars 2 and all related logos and names are trademarks of ArenaNet, LLC. See our{" "}
+        buildop is a fan-made project and is not affiliated with, endorsed, sponsored or
+        specifically approved by ArenaNet or NCSOFT. See our{" "}
         <Link href="/privacy">Privacy Policy</Link> for how data is handled.
       </p>
     </DocLayout>
