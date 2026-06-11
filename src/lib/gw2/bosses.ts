@@ -182,6 +182,21 @@ function computeStatus(boss: Boss, now: Date): BossStatus {
   };
 }
 
+/**
+ * Find the world boss referenced in a piece of text (e.g. an achievement name +
+ * requirement like "Defeat the Shadow Behemoth in Godslost Swamp"). Case-
+ * insensitive; prefers the longest matching boss name to avoid partial overlaps.
+ */
+export function matchBoss(text: string | null | undefined): Boss | null {
+  if (!text) return null;
+  const t = text.toLowerCase();
+  let best: Boss | null = null;
+  for (const b of BOSSES) {
+    if (t.includes(b.name.toLowerCase()) && (!best || b.name.length > best.name.length)) best = b;
+  }
+  return best;
+}
+
 /** Format a millisecond duration as "1h 23m 45s" / "12m 30s" / "45s". */
 export function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));

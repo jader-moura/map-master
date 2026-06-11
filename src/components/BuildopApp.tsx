@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getBossStatuses,
   formatCountdown,
+  BOSSES,
   BOSS_WAYPOINTS,
   BOSS_LEVELS,
   type BossStatus,
@@ -188,6 +189,17 @@ export default function BuildopApp() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default");
   useEffect(() => setPerm(notifyPermission()), []);
+
+  // Deep link: /gw2-world-boss-timer?boss=<id> focuses that boss on load (used by
+  // boss-kill achievement links on item pages).
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("boss");
+    if (id && BOSSES.some((b) => b.id === id)) {
+      setShowBosses(true);
+      setSelectedId(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [copied, setCopied] = useState(false);
   function copyWaypoint(wp?: string) {
