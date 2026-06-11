@@ -52,26 +52,67 @@ export async function salvagesInto(itemName: string): Promise<string[]> {
 }
 
 // --- Vendors ----------------------------------------------------------------
-export type Vendor = { slug: string; name: string };
+export type VendorLocation = {
+  area: string;
+  zone: string | null;
+  waypoint: string | null;
+  chat: string | null;
+  coord: [number, number] | null;
+};
+export type Vendor = {
+  slug: string;
+  name: string;
+  icon: string | null;
+  locations: VendorLocation[];
+};
 
 export async function vendorBySlug(slug: string): Promise<Vendor | null> {
   const sql = getSql();
-  const rows = await sql<Vendor[]>`select slug, name from vendors where slug = ${slug} limit 1`;
+  const rows = await sql<Vendor[]>`
+    select slug, name, icon, locations from vendors where slug = ${slug} limit 1
+  `;
   return rows[0] ?? null;
 }
 
-export type VendorListing = { slug: string; name: string; item_count: number };
+export type VendorListing = {
+  slug: string;
+  name: string;
+  icon: string | null;
+  location: string | null;
+  waypoint: string | null;
+  item_count: number;
+};
 
-/** Every vendor with how many distinct items it sells, for the directory page. */
+/** Every vendor with its primary location and how many distinct items it sells. */
 export async function listVendors(): Promise<VendorListing[]> {
   const sql = getSql();
   return sql<VendorListing[]>`
-    select v.slug, v.name, count(distinct s.item_name)::int as item_count
+    select v.slug, v.name, v.icon,
+           coalesce(v.locations->0->>'zone', v.locations->0->>'area') as location,
+           v.locations->0->>'chat' as waypoint,
+           count(distinct s.item_name)::int as item_count
     from vendors v
     left join item_sources s
       on s.source_type = 'sold_by' and s.source_slug = v.slug
-    group by v.slug, v.name
+    group by v.slug, v.name, v.icon, v.locations
     order by v.name
+  `;
+}
+
+/** Vendor listings for a set of slugs (used by the item "Sold by" list). */
+export async function vendorsBySlugs(slugs: string[]): Promise<VendorListing[]> {
+  if (!slugs.length) return [];
+  const sql = getSql();
+  return sql<VendorListing[]>`
+    select v.slug, v.name, v.icon,
+           coalesce(v.locations->0->>'zone', v.locations->0->>'area') as location,
+           v.locations->0->>'chat' as waypoint,
+           count(distinct s.item_name)::int as item_count
+    from vendors v
+    left join item_sources s
+      on s.source_type = 'sold_by' and s.source_slug = v.slug
+    where v.slug in ${sql(slugs)}
+    group by v.slug, v.name, v.icon, v.locations
   `;
 }
 
@@ -115,6 +156,35 @@ export async function achievementItemIds(id: number, role: string): Promise<numb
     select item_id from achievement_items where achievement_id = ${id} and role = ${role}
   `;
   return rows.map((r) => r.item_id);
+}
+
+export type AchievementLocation = {
+  kind: "area" | "map" | "region";
+  name: string;
+  zone: string | null;
+  waypoint: string | null;
+  chat: string | null;
+  coord: [number, number] | null;
+};
+export type RewardAchievement = {
+  id: number;
+  name: string;
+  requirement: string | null;
+  point_cap: number | null;
+  icon: string | null;
+  location: AchievementLocation | null;
+};
+
+/** Achievements that reward this item (achievement_items role = 'reward'). */
+export async function achievementsRewardingItem(itemId: number): Promise<RewardAchievement[]> {
+  const sql = getSql();
+  return sql<RewardAchievement[]>`
+    select a.id, a.name, a.requirement, a.point_cap, a.icon, a.location
+    from achievement_items ai
+    join achievements a on a.id = ai.achievement_id
+    where ai.role = 'reward' and ai.item_id = ${itemId}
+    order by a.name
+  `;
 }
 
 /** Map achievement names -> {id, name}, for turning source names into links. */

@@ -1,10 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Icon, P } from "@/components/icons";
+import { VendorCard } from "@/components/VendorCard";
 
-type Vendor = { slug: string; name: string; item_count: number };
+type Vendor = {
+  slug: string;
+  name: string;
+  icon: string | null;
+  location: string | null;
+  waypoint: string | null;
+  item_count: number;
+};
 
 export default function VendorDirectory({ vendors }: { vendors: Vendor[] }) {
   const [q, setQ] = useState("");
@@ -39,16 +46,7 @@ export default function VendorDirectory({ vendors }: { vendors: Vendor[] }) {
       {filtered.length > 0 ? (
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((v) => (
-            <Link
-              key={v.slug}
-              href={`/gw2/vendor/${v.slug}`}
-              className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/75 transition hover:border-orange-400/30 hover:text-orange-400"
-            >
-              <span className="truncate">{v.name}</span>
-              {v.item_count > 0 && (
-                <span className="ml-auto shrink-0 text-xs text-white/40">{v.item_count}</span>
-              )}
-            </Link>
+            <VendorCard key={v.slug} vendor={v} itemCount={v.item_count} waypoint={v.waypoint} />
           ))}
         </div>
       ) : (

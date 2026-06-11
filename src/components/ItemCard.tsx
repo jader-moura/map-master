@@ -8,11 +8,14 @@ export function ItemCard({
   name,
   icon,
   rarity,
+  cost,
 }: {
   id: number;
   name: string;
   icon?: string;
   rarity?: string;
+  /** Optional price/cost shown on the right (e.g. a vendor's price for this item). */
+  cost?: string | null;
 }) {
   return (
     <Link
@@ -24,7 +27,8 @@ export function ItemCard({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={icon} alt="" width={28} height={28} className="h-7 w-7 shrink-0 rounded" />
       )}
-      <span className="truncate">{name}</span>
+      <span className="min-w-0 flex-1 truncate">{name}</span>
+      {cost && <span className="shrink-0 text-xs text-orange-300/80">{cost}</span>}
     </Link>
   );
 }

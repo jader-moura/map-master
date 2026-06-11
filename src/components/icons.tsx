@@ -50,4 +50,5 @@ export const P = {
   shield: "M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3z",
   doc: "M6 2h9l4 4v16H6zM15 2v4h4M9 12h6M9 16h6",
   mail: "M3 6h18v12H3zM3 7l9 6 9-6",
+  store: "M4 8l1.5-4h13L20 8M4 8h16M5 8v12h14V8M10 20v-6h4v6",
 };

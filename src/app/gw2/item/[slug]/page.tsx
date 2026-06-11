@@ -6,6 +6,8 @@ import IconRail from "@/components/IconRail";
 import { Icon, P } from "@/components/icons";
 import { Coins } from "@/components/Coins";
 import { ItemCard } from "@/components/ItemCard";
+import { VendorCard } from "@/components/VendorCard";
+import AchievementRewardCard from "@/components/AchievementRewardCard";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo";
 import {
@@ -28,9 +30,11 @@ import {
 } from "@/lib/gw2/items";
 import {
   achievementsByNames,
+  achievementsRewardingItem,
   itemsByNames,
   itemSources,
   salvagesInto,
+  vendorsBySlugs,
   type DbItem,
   type SourceRow,
 } from "@/lib/gw2/itemsDb";
@@ -102,9 +106,10 @@ export default async function ItemPage({ params }: Params) {
   const priceById = new Map(relatedPrices.map((p) => [p.id, p]));
 
   // All acquisition + collection edges come from our DB (synced from the wiki).
-  const [sources, salvageNames] = await Promise.all([
+  const [sources, salvageNames, rewardAchievements] = await Promise.all([
     itemSources(item.name).catch(() => [] as SourceRow[]),
     salvagesInto(item.name).catch(() => [] as string[]),
+    achievementsRewardingItem(item.id).catch(() => []),
   ]);
 
   // Group edges by type.
@@ -116,6 +121,12 @@ export default async function ItemPage({ params }: Params) {
   const collections = byType("collection");
   const hasAcquisition =
     soldBy.length > 0 || containedIn.length > 0 || salvagedFrom.length > 0 || rewardedBy.length > 0;
+
+  // Full vendor cards (image + location) for the "Sold by" list, matching the
+  // vendor directory style.
+  const soldBySlugs = [...new Set(soldBy.map((s) => s.source_slug).filter((x): x is string => Boolean(x)))];
+  const soldByVendors = soldBySlugs.length ? await vendorsBySlugs(soldBySlugs).catch(() => []) : [];
+  const vendorBySlugMap = new Map(soldByVendors.map((v) => [v.slug, v] as const));
 
   // Resolve item-names (salvage results + container + salvaged-from items) to our
   // DB so they render as linked cards; the rest fall back to plain text.
@@ -229,7 +240,24 @@ export default async function ItemPage({ params }: Params) {
                   <AcqGroup label="Salvaged from" sources={salvagedFrom} mode="items" dbByName={dbByName} />
                 )}
                 {soldBy.length > 0 && (
-                  <AcqGroup label="Sold by" sources={soldBy} mode="vendors" />
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">Sold by</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {soldBy.map((s) => {
+                        const v = s.source_slug ? vendorBySlugMap.get(s.source_slug) : null;
+                        return v ? (
+                          <VendorCard key={`${s.source_name}-${s.source_slug}`} vendor={v} cost={s.cost} waypoint={v.waypoint} />
+                        ) : (
+                          <span
+                            key={s.source_name}
+                            className="flex items-center rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/60"
+                          >
+                            <span className="truncate">{s.source_name}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
                 {containedIn.length > 0 && (
                   <AcqGroup label="Contained in" sources={containedIn} mode="items" dbByName={dbByName} />
@@ -312,13 +340,29 @@ export default async function ItemPage({ params }: Params) {
             </Section>
           )}
 
+          {/* Achievements that reward this item (from /v2/achievements). Each card
+              expands to a mini-map + copy-waypoint where a location was resolved. */}
+          {rewardAchievements.length > 0 && (
+            <Section
+              title="Achievement rewards"
+              hint={`${rewardAchievements.length} achievement${rewardAchievements.length > 1 ? "s" : ""}`}
+            >
+              <div className="flex flex-col gap-2">
+                {rewardAchievements.map((a) => (
+                  <AchievementRewardCard key={a.id} achievement={a} />
+                ))}
+              </div>
+            </Section>
+          )}
+
           {craftRecipes.length === 0 &&
             usedInRecipes.length === 0 &&
             salvageItems.length === 0 &&
             collections.length === 0 &&
+            rewardAchievements.length === 0 &&
             !hasAcquisition && (
               <p className="mt-10 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-6 text-center text-sm text-white/45">
-                No crafting, acquisition or collection data is available for this item yet.
+                No crafting, acquisition, achievement or collection data is available for this item yet.
               </p>
             )}
 

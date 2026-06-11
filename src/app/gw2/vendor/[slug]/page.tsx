@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import Footer from "@/components/Footer";
 import IconRail from "@/components/IconRail";
 import { ItemCard } from "@/components/ItemCard";
+import CopyWaypoint from "@/components/CopyWaypoint";
+import VendorMapView from "@/components/VendorMapView";
 import { Icon, P } from "@/components/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo";
@@ -36,6 +38,11 @@ export default async function VendorPage({ params }: Params) {
     : [];
   const dbByName = new Map<string, DbItem>(dbItems.map((i) => [i.name, i]));
 
+  // Locations that have map coordinates, for the small map.
+  const mapLocations = vendor.locations
+    .filter((l) => Array.isArray(l.coord) && l.coord.length === 2)
+    .map((l) => ({ area: l.area, zone: l.zone, coord: l.coord as [number, number] }));
+
   return (
     <div className="flex h-[100dvh] bg-[#0a0a0f] text-white">
       <IconRail showInfo={false} />
@@ -62,10 +69,62 @@ export default async function VendorPage({ params }: Params) {
             <span className="text-white/60">{vendor.name}</span>
           </nav>
 
-          <h1 className="text-3xl font-bold">{vendor.name}</h1>
-          <p className="mt-2 text-sm text-white/45">
-            Guild Wars 2 vendor. {sales.length > 0 ? `Sells ${sales.length} item${sales.length === 1 ? "" : "s"}.` : ""}
-          </p>
+          <div className="flex items-start gap-5">
+            {vendor.icon ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={vendor.icon}
+                alt={vendor.name}
+                width={153}
+                height={300}
+                className="h-[300px] w-[153px] shrink-0 rounded-xl border border-white/10 object-cover"
+              />
+            ) : (
+              <span className="grid h-[300px] w-[153px] shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/30">
+                <Icon path={P.store} className="h-16 w-16" />
+              </span>
+            )}
+            <div className="min-w-0">
+              <h1 className="text-3xl font-bold">{vendor.name}</h1>
+              <p className="mt-2 text-sm text-white/45">
+                Guild Wars 2 vendor. {sales.length > 0 ? `Sells ${sales.length} item${sales.length === 1 ? "" : "s"}.` : ""}
+              </p>
+            </div>
+          </div>
+
+          {vendor.locations.length > 0 && (
+            <section className="mt-8">
+              <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+                <h2 className="text-lg font-semibold text-white">Locations</h2>
+                <span className="text-xs text-white/40">
+                  {vendor.locations.length} location{vendor.locations.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              {mapLocations.length > 0 && (
+                <div className="mb-3">
+                  <VendorMapView locations={mapLocations} />
+                </div>
+              )}
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {vendor.locations.map((loc, i) => (
+                  <div
+                    key={`${loc.area}-${i}`}
+                    className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-white/85">{loc.area}</p>
+                      {(loc.zone || loc.waypoint) && (
+                        <p className="truncate text-xs text-white/40">
+                          {[loc.zone, loc.waypoint].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                    </div>
+                    {loc.chat && <CopyWaypoint code={loc.chat} />}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {sales.length > 0 ? (
             <section className="mt-8">
@@ -77,13 +136,21 @@ export default async function VendorPage({ params }: Params) {
                 {sales.map((s) => {
                   const it = dbByName.get(s.item_name);
                   return it ? (
-                    <ItemCard key={s.item_name} id={it.id} name={it.name} icon={it.icon ?? undefined} rarity={it.rarity ?? undefined} />
+                    <ItemCard
+                      key={s.item_name}
+                      id={it.id}
+                      name={it.name}
+                      icon={it.icon ?? undefined}
+                      rarity={it.rarity ?? undefined}
+                      cost={s.cost}
+                    />
                   ) : (
                     <span
                       key={s.item_name}
-                      className="flex items-center rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/60"
+                      className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/60"
                     >
-                      <span className="truncate">{s.item_name}</span>
+                      <span className="min-w-0 flex-1 truncate">{s.item_name}</span>
+                      {s.cost && <span className="shrink-0 text-xs text-orange-300/80">{s.cost}</span>}
                     </span>
                   );
                 })}
