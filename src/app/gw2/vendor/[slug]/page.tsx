@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Footer from "@/components/Footer";
-import IconRail from "@/components/IconRail";
+import PageShell from "@/components/PageShell";
 import { ItemCard } from "@/components/ItemCard";
 import CopyWaypoint from "@/components/CopyWaypoint";
 import VendorMapView from "@/components/VendorMapView";
@@ -44,23 +44,15 @@ export default async function VendorPage({ params }: Params) {
     .map((l) => ({ area: l.area, zone: l.zone, coord: l.coord as [number, number] }));
 
   return (
-    <div className="flex h-[100dvh] bg-[#0a0a0f] text-white">
-      <IconRail showInfo={false} />
-
-      <main className="scroll-themed min-w-0 flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-white/10 bg-[#0d0d14]/95 px-4 backdrop-blur">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 text-black">
-              <Icon path={P.bolt} className="h-5 w-5" />
-            </span>
-            <span className="text-base font-bold tracking-tight">buildop</span>
-          </Link>
-          <Link href="/gw2/items" className="ml-auto text-sm text-white/55 transition hover:text-white">
-            Item database
-          </Link>
-        </header>
-
-        <article className="mx-auto max-w-4xl px-5 py-10">
+    <PageShell
+      title={vendor.name}
+      headerRight={
+        <Link href="/gw2/items" className="text-sm text-white/55 transition hover:text-white">
+          Item database
+        </Link>
+      }
+    >
+      <article className="mx-auto max-w-4xl px-5 py-10">
           <nav aria-label="Breadcrumb" className="mb-4 text-xs text-white/40">
             <Link href="/" className="transition hover:text-orange-400">Home</Link>
             <span className="px-1.5">/</span>
@@ -167,8 +159,7 @@ export default async function VendorPage({ params }: Params) {
           </p>
         </article>
 
-        <Footer />
-      </main>
+      <Footer />
 
       <JsonLd
         data={breadcrumbJsonLd([
@@ -177,6 +168,6 @@ export default async function VendorPage({ params }: Params) {
           { name: vendor.name, path: `/gw2/vendor/${slug}` },
         ])}
       />
-    </div>
+    </PageShell>
   );
 }

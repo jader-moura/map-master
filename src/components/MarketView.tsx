@@ -50,7 +50,7 @@ export default function MarketView() {
         <IconRail />
 
         <main className="scroll-themed min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+          <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
             <header className="mb-5">
               <h1 className="text-2xl font-bold text-white">Guild Wars 2 Trading Post Prices</h1>
               <p className="mt-1 text-sm text-white/50">
