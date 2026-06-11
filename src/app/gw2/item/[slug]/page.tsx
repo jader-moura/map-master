@@ -7,7 +7,7 @@ import { Icon, P } from "@/components/icons";
 import { Coins } from "@/components/Coins";
 import { ItemCard } from "@/components/ItemCard";
 import { VendorCard } from "@/components/VendorCard";
-import AchievementRewardCard from "@/components/AchievementRewardCard";
+import AchievementRewardList from "@/components/AchievementRewardList";
 import CopyCode from "@/components/CopyCode";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo";
@@ -346,11 +346,7 @@ export default async function ItemPage({ params }: Params) {
               title="Achievement rewards"
               hint={`${rewardAchievements.length} achievement${rewardAchievements.length > 1 ? "s" : ""}`}
             >
-              <div className="flex flex-col gap-2">
-                {rewardAchievements.map((a) => (
-                  <AchievementRewardCard key={a.id} achievement={a} />
-                ))}
-              </div>
+              <AchievementRewardList achievements={rewardAchievements} />
             </Section>
           )}
 
