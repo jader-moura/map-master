@@ -32,6 +32,12 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# sync resume state
+scripts/.sync-progress.json
+scripts/.sync-wiki-progress.json
+scripts/.sync-ach-progress.json
 
 # vercel
 .vercel

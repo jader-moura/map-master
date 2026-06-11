@@ -3,6 +3,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import IconRail from "@/components/IconRail";
 import { ItemCard } from "@/components/ItemCard";
+import ItemSearch from "@/components/ItemSearch";
 import { Icon, P } from "@/components/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getItemsFull, type Gw2ItemFull } from "@/lib/gw2/api";
@@ -68,18 +69,30 @@ export default async function ItemsHubPage() {
 
           <h1 className="text-3xl font-bold">GW2 Item Database</h1>
           <p className="mt-3 max-w-prose text-[15px] leading-relaxed text-white/65">
-            Browse notable Guild Wars 2 items by category. Open any item to see how to craft it, the
-            recipes it is used in, and its live Trading Post buy and sell price, all sourced from the
-            official Guild Wars 2 API. Looking for material prices? See the{" "}
+            Search every Guild Wars 2 item by name and filter by rarity or type. Open any item to see
+            how to craft it, the recipes it is used in, and its live Trading Post buy and sell price,
+            all sourced from the official Guild Wars 2 API. Looking for material prices? See the{" "}
             <Link href="/gw2-trading-post" className="text-orange-400 hover:underline">
               Trading Post
-            </Link>{" "}
-            and the{" "}
+            </Link>
+            , the{" "}
             <Link href="/gw2-gathering-map" className="text-orange-400 hover:underline">
               gathering map
+            </Link>{" "}
+            and the{" "}
+            <Link href="/gw2/vendors" className="text-orange-400 hover:underline">
+              vendor directory
             </Link>
             .
           </p>
+
+          <div className="mt-6">
+            <ItemSearch />
+          </div>
+
+          <h2 className="mt-12 border-t border-white/10 pt-8 text-xl font-bold">
+            Browse by category
+          </h2>
 
           {ALL_GROUPS.map((group) => (
             <section key={group.label} className="mt-9">

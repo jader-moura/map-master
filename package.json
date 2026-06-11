@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
+    "sync:items": "node --env-file=.env.local scripts/sync-items.mjs",
+    "sync:wiki": "node --env-file=.env.local scripts/sync-wiki.mjs",
+    "sync:achievements": "node --env-file=.env.local scripts/sync-achievements.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
@@ -14,6 +18,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "leaflet": "^1.9.4",
     "next": "16.2.7",
+    "postgres": "^3.4.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0"

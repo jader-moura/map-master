@@ -26,6 +26,14 @@ import {
   parseItemId,
   rarityColor,
 } from "@/lib/gw2/items";
+import {
+  achievementsByNames,
+  itemsByNames,
+  itemSources,
+  salvagesInto,
+  type DbItem,
+  type SourceRow,
+} from "@/lib/gw2/itemsDb";
 
 // How many "used in" recipes to show (some staples feed hundreds of recipes).
 const USED_IN_LIMIT = 18;
@@ -92,6 +100,44 @@ export default async function ItemPage({ params }: Params) {
 
   const itemById = new Map(relatedItems.map((i) => [i.id, i]));
   const priceById = new Map(relatedPrices.map((p) => [p.id, p]));
+
+  // All acquisition + collection edges come from our DB (synced from the wiki).
+  const [sources, salvageNames] = await Promise.all([
+    itemSources(item.name).catch(() => [] as SourceRow[]),
+    salvagesInto(item.name).catch(() => [] as string[]),
+  ]);
+
+  // Group edges by type.
+  const byType = (t: string) => sources.filter((s) => s.source_type === t);
+  const soldBy = byType("sold_by");
+  const containedIn = byType("contained_in");
+  const salvagedFrom = byType("salvaged_from");
+  const rewardedBy = byType("rewarded_by");
+  const collections = byType("collection");
+  const hasAcquisition =
+    soldBy.length > 0 || containedIn.length > 0 || salvagedFrom.length > 0 || rewardedBy.length > 0;
+
+  // Resolve item-names (salvage results + container + salvaged-from items) to our
+  // DB so they render as linked cards; the rest fall back to plain text.
+  const itemLikeNames = [
+    ...new Set([
+      ...salvageNames,
+      ...containedIn.map((s) => s.source_name),
+      ...salvagedFrom.map((s) => s.source_name),
+    ]),
+  ];
+  // Resolve collection / reward-source names to achievements, for internal links.
+  const achNames = [...new Set([...collections.map((s) => s.source_name), ...rewardedBy.map((s) => s.source_name)])];
+
+  const [dbItems, achList] = await Promise.all([
+    itemLikeNames.length ? itemsByNames(itemLikeNames).catch(() => []) : Promise.resolve([]),
+    achNames.length ? achievementsByNames(achNames).catch(() => []) : Promise.resolve([]),
+  ]);
+  const dbByName = new Map<string, DbItem>(dbItems.map((i) => [i.name, i]));
+  const achByName = new Map(achList.map((a) => [a.name, a] as const));
+  const salvageItems = salvageNames
+    .map((n) => dbByName.get(n))
+    .filter((x): x is DbItem => Boolean(x));
 
   const color = rarityColor(item.rarity);
   const binding = bindingLabel(item.flags);
@@ -175,7 +221,27 @@ export default async function ItemPage({ params }: Params) {
             </div>
           </div>
 
-          {/* Acquisition: how to craft it */}
+          {/* Acquisition: where the item comes from (synced wiki data) */}
+          {hasAcquisition && (
+            <Section title="Acquisition" hint="How to get it">
+              <div className="flex flex-col gap-4">
+                {salvagedFrom.length > 0 && (
+                  <AcqGroup label="Salvaged from" sources={salvagedFrom} mode="items" dbByName={dbByName} />
+                )}
+                {soldBy.length > 0 && (
+                  <AcqGroup label="Sold by" sources={soldBy} mode="vendors" />
+                )}
+                {containedIn.length > 0 && (
+                  <AcqGroup label="Contained in" sources={containedIn} mode="items" dbByName={dbByName} />
+                )}
+                {rewardedBy.length > 0 && (
+                  <AcqGroup label="Rewarded by" sources={rewardedBy} mode="achievements" achByName={achByName} />
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* Crafting: recipes that produce it */}
           {craftRecipes.length > 0 && (
             <Section title="How to craft" hint="Recipes that produce this item">
               <div className="flex flex-col gap-4">
@@ -212,12 +278,54 @@ export default async function ItemPage({ params }: Params) {
             </Section>
           )}
 
-          {craftRecipes.length === 0 && usedInRecipes.length === 0 && (
-            <p className="mt-10 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-6 text-center text-sm text-white/45">
-              No crafting recipes are associated with this item in the Guild Wars 2 API. It is
-              typically obtained in-game from drops, vendors, achievements or rewards.
-            </p>
+          {/* Salvage results (from the wiki) */}
+          {salvageItems.length > 0 && (
+            <Section title="Salvages into" hint="What you get from salvaging this">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {salvageItems.map((s) => (
+                  <ItemCard key={s.id} id={s.id} name={s.name} icon={s.icon ?? undefined} rarity={s.rarity ?? undefined} />
+                ))}
+              </div>
+            </Section>
           )}
+
+          {/* Collections this item belongs to (linked to our achievement pages) */}
+          {collections.length > 0 && (
+            <Section
+              title="Part of collections"
+              hint={`${collections.length} collection${collections.length > 1 ? "s" : ""}`}
+            >
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {collections.map((c) => {
+                  const ach = achByName.get(c.source_name);
+                  return ach ? (
+                    <Link key={c.source_name} href={`/gw2/achievement/${itemSlug(ach.id, ach.name)}`} className={CHIP}>
+                      <span className="truncate">{c.source_name}</span>
+                    </Link>
+                  ) : (
+                    <span key={c.source_name} className={`${CHIP} hover:border-white/10 hover:text-white/75`}>
+                      <span className="truncate">{c.source_name}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+
+          {craftRecipes.length === 0 &&
+            usedInRecipes.length === 0 &&
+            salvageItems.length === 0 &&
+            collections.length === 0 &&
+            !hasAcquisition && (
+              <p className="mt-10 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-6 text-center text-sm text-white/45">
+                No crafting, acquisition or collection data is available for this item yet.
+              </p>
+            )}
+
+          <p className="mt-10 border-t border-white/10 pt-5 text-xs text-white/35">
+            Item data from the official Guild Wars 2 API. Acquisition, salvage and collection data
+            from the Guild Wars 2 Wiki.
+          </p>
         </article>
 
         <Footer />
@@ -351,6 +459,76 @@ function IngredientRow({
         {price ? <Coins value={price.sells.unit_price * count} /> : <span className="text-white/25">-</span>}
       </span>
     </li>
+  );
+}
+
+const CHIP =
+  "flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/75 transition hover:border-orange-400/30 hover:text-orange-400";
+
+// A labelled acquisition sub-list. `mode` decides how each source links, all
+// internal: vendors -> /gw2/vendor; items -> /gw2/item; achievements ->
+// /gw2/achievement. Anything we don't host yet renders as plain text (never a
+// link off-site).
+function AcqGroup({
+  label,
+  sources,
+  mode,
+  dbByName,
+  achByName,
+}: {
+  label: string;
+  sources: SourceRow[];
+  mode: "items" | "vendors" | "achievements";
+  dbByName?: Map<string, DbItem>;
+  achByName?: Map<string, { id: number; name: string }>;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">{label}</p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {sources.map((s) => {
+          const name = s.source_name;
+          if (mode === "vendors" && s.source_slug) {
+            return (
+              <Link key={name} href={`/gw2/vendor/${s.source_slug}`} className={CHIP}>
+                <span className="truncate">{name}</span>
+                {s.cost && <span className="ml-auto shrink-0 text-white/40">{s.cost}</span>}
+              </Link>
+            );
+          }
+          if (mode === "items") {
+            const it = dbByName?.get(name);
+            if (it) {
+              return (
+                <ItemCard
+                  key={name}
+                  id={it.id}
+                  name={it.name}
+                  icon={it.icon ?? undefined}
+                  rarity={it.rarity ?? undefined}
+                />
+              );
+            }
+          }
+          if (mode === "achievements") {
+            const ach = achByName?.get(name);
+            if (ach) {
+              return (
+                <Link key={name} href={`/gw2/achievement/${itemSlug(ach.id, ach.name)}`} className={CHIP}>
+                  <span className="truncate">{name}</span>
+                </Link>
+              );
+            }
+          }
+          // Not hosted yet: plain text, no outbound link.
+          return (
+            <span key={name} className="flex items-center rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/60">
+              <span className="truncate">{name}</span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
