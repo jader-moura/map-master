@@ -20,15 +20,17 @@ export function ItemCard({
   return (
     <Link
       href={`/gw2/item/${itemSlug(id, name)}`}
-      className="flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/80 transition hover:border-orange-400/30 hover:bg-white/[0.06] hover:text-white"
+      className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/80 transition hover:border-orange-400/30 hover:bg-white/[0.06] hover:text-white"
       style={{ borderLeft: `3px solid ${rarityColor(rarity ?? "Basic")}` }}
     >
       {icon && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={icon} alt="" width={28} height={28} className="h-7 w-7 shrink-0 rounded" />
+        <img src={icon} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded" />
       )}
-      <span className="min-w-0 flex-1 truncate">{name}</span>
-      {cost && <span className="shrink-0 text-xs text-orange-300/80">{cost}</span>}
+      <div className="min-w-0 flex-1">
+        <span className="block truncate">{name}</span>
+        {cost && <span className="mt-0.5 block truncate text-xs text-orange-300/80">{cost}</span>}
+      </div>
     </Link>
   );
 }
