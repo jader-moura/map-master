@@ -8,6 +8,7 @@ import { Coins } from "@/components/Coins";
 import { ItemCard } from "@/components/ItemCard";
 import { VendorCard } from "@/components/VendorCard";
 import AchievementRewardCard from "@/components/AchievementRewardCard";
+import CopyCode from "@/components/CopyCode";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/seo";
 import {
@@ -225,9 +226,7 @@ export default async function ItemPage({ params }: Params) {
                     </span>
                   </>
                 )}
-                <code className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-xs text-white/45">
-                  {item.chat_link}
-                </code>
+                <CopyCode code={item.chat_link} />
               </div>
             </div>
           </div>
