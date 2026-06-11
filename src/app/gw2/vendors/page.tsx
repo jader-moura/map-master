@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import PageShell from "@/components/PageShell";
 import VendorDirectory from "@/components/VendorDirectory";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd, SITE_URL } from "@/lib/seo";
+import { SITE_URL } from "@/lib/seo";
 import { listVendors, type VendorListing } from "@/lib/gw2/itemsDb";
 
 export const metadata: Metadata = {
@@ -39,6 +39,30 @@ export default async function VendorsHubPage() {
   return (
     <PageShell
       title="Vendors"
+      seo={{
+        heading: "GW2 Vendors",
+        intro: (
+          <>
+            <p>
+              Browse every Guild Wars 2 vendor we have a sales list for. Each vendor page shows the
+              items it sells with their costs, its location on the Tyria map, and a copy-ready
+              waypoint chat code so you can travel straight there.
+            </p>
+            <p>Vendor data is mirrored from the Guild Wars 2 Wiki; item icons and prices come from the official Guild Wars 2 API.</p>
+          </>
+        ),
+        faqs: [
+          {
+            q: "How do I get to a vendor?",
+            a: "Open a vendor to see its location and a copy waypoint button; paste the chat code into the in-game chat to open the map at the nearest waypoint.",
+          },
+          {
+            q: "Can I see what a vendor sells?",
+            a: "Yes, each vendor page lists every item it sells along with the cost in coin, karma or tokens.",
+          },
+        ],
+        breadcrumb: BREADCRUMB,
+      }}
       headerRight={
         <Link href="/gw2/items" className="text-sm text-white/55 transition hover:text-white">
           Item database
@@ -75,7 +99,6 @@ export default async function VendorsHubPage() {
 
       <Footer />
 
-      <JsonLd data={breadcrumbJsonLd(BREADCRUMB)} />
       <JsonLd data={vendorListLd} />
     </PageShell>
   );

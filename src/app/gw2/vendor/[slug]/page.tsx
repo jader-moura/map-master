@@ -7,8 +7,6 @@ import { ItemCard } from "@/components/ItemCard";
 import CopyWaypoint from "@/components/CopyWaypoint";
 import VendorMapView from "@/components/VendorMapView";
 import { Icon, P } from "@/components/icons";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
 import { itemsByNames, vendorBySlug, vendorSales, type DbItem } from "@/lib/gw2/itemsDb";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -46,6 +44,32 @@ export default async function VendorPage({ params }: Params) {
   return (
     <PageShell
       title={vendor.name}
+      seo={{
+        heading: vendor.name,
+        intro: (
+          <p>
+            {vendor.name} is a vendor in Guild Wars 2. This page lists the items {vendor.name} sells
+            and their costs, the vendor&apos;s location on the Tyria map, and a copy-ready waypoint
+            chat code to travel there. Vendor data is from the Guild Wars 2 Wiki; item icons from the
+            official Guild Wars 2 API.
+          </p>
+        ),
+        faqs: [
+          {
+            q: `Where is ${vendor.name} located?`,
+            a: `The Locations section shows where ${vendor.name} can be found, with a small map and a copy waypoint button for the nearest waypoint.`,
+          },
+          {
+            q: `What does ${vendor.name} sell?`,
+            a: `The Sells section lists every item ${vendor.name} offers along with its cost.`,
+          },
+        ],
+        breadcrumb: [
+          { name: "Home", path: "/" },
+          { name: "Item Database", path: "/gw2/items" },
+          { name: vendor.name, path: `/gw2/vendor/${slug}` },
+        ],
+      }}
       headerRight={
         <Link href="/gw2/items" className="text-sm text-white/55 transition hover:text-white">
           Item database
@@ -160,14 +184,6 @@ export default async function VendorPage({ params }: Params) {
         </article>
 
       <Footer />
-
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "Item Database", path: "/gw2/items" },
-          { name: vendor.name, path: `/gw2/vendor/${slug}` },
-        ])}
-      />
     </PageShell>
   );
 }

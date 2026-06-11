@@ -8,8 +8,6 @@ import { ItemCard } from "@/components/ItemCard";
 import { VendorCard } from "@/components/VendorCard";
 import AchievementRewardList from "@/components/AchievementRewardList";
 import CopyCode from "@/components/CopyCode";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
 import {
   getItem,
   getItemsFull,
@@ -158,6 +156,33 @@ export default async function ItemPage({ params }: Params) {
   return (
     <PageShell
       title={item.name}
+      seo={{
+        heading: item.name,
+        intro: (
+          <p>
+            {item.name} is a {item.rarity?.toLowerCase()} {(subtype ?? item.type).toLowerCase()} in
+            Guild Wars 2{item.level ? ` (level ${item.level})` : ""}. This page shows how to get it,
+            its crafting recipes, what it is used in, the achievements that reward it, and its live
+            Trading Post buy and sell price, sourced from the official Guild Wars 2 API and the Guild
+            Wars 2 Wiki.
+          </p>
+        ),
+        faqs: [
+          {
+            q: `How do I get ${item.name} in GW2?`,
+            a: `Check the Acquisition and "Sold by" sections, which list the vendors, containers, salvage sources and achievements that grant ${item.name}, where known.`,
+          },
+          {
+            q: `What is the Trading Post price of ${item.name}?`,
+            a: "The live buy and sell prices are shown at the top of the page, pulled from the official Guild Wars 2 Trading Post API.",
+          },
+        ],
+        breadcrumb: [
+          { name: "Home", path: "/" },
+          { name: "Item Database", path: "/gw2/items" },
+          { name: item.name, path: `/gw2/item/${itemSlug(item.id, item.name)}` },
+        ],
+      }}
       headerRight={
         <Link href="/" className="text-sm text-white/55 transition hover:text-white">
           Back to map
@@ -359,14 +384,6 @@ export default async function ItemPage({ params }: Params) {
         </article>
 
       <Footer />
-
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "Item Database", path: "/gw2/items" },
-          { name: item.name, path: `/gw2/item/${itemSlug(item.id, item.name)}` },
-        ])}
-      />
     </PageShell>
   );
 }

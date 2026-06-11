@@ -2,6 +2,10 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import IconRail from "@/components/IconRail";
 import { Icon, P } from "@/components/icons";
+import { SeoModal } from "@/components/seo/SeoModal";
+import type { Faq, Crumb } from "@/lib/seo";
+
+export type PageSeo = { heading: string; intro: ReactNode; faqs?: Faq[]; breadcrumb: Crumb[] };
 
 // Shared app shell for non-map pages. Matches the map/boss-timer layout: a
 // full-width header across the top, then the IconRail sidebar beside the
@@ -10,11 +14,14 @@ import { Icon, P } from "@/components/icons";
 export default function PageShell({
   title,
   headerRight,
+  seo,
   children,
 }: {
   /** Short page title shown as a badge in the header, like the map pages. */
   title?: string;
   headerRight?: ReactNode;
+  /** Per-page SEO content shown in the info modal (opened from the sidebar). */
+  seo?: PageSeo;
   children: ReactNode;
 }) {
   return (
@@ -35,9 +42,13 @@ export default function PageShell({
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <IconRail showInfo={false} />
+        <IconRail showInfo={Boolean(seo)} />
         <main className="scroll-themed min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
+
+      {seo && (
+        <SeoModal heading={seo.heading} intro={seo.intro} faqs={seo.faqs} breadcrumb={seo.breadcrumb} />
+      )}
     </div>
   );
 }

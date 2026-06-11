@@ -7,7 +7,7 @@ import ItemSearch from "@/components/ItemSearch";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getItemsFull, type Gw2ItemFull } from "@/lib/gw2/api";
 import { ALL_GROUPS, INDEX_ITEM_IDS } from "@/lib/gw2/itemIndex";
-import { breadcrumbJsonLd, SITE_URL } from "@/lib/seo";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "GW2 Item Database | Recipes, Prices & How to Get Items",
@@ -43,6 +43,34 @@ export default async function ItemsHubPage() {
   return (
     <PageShell
       title="Item Database"
+      seo={{
+        heading: "GW2 Item Database",
+        intro: (
+          <>
+            <p>
+              Search the full Guild Wars 2 item database by name and filter by rarity or type. Every
+              item links to a page showing how to get it (vendors, salvage, achievement rewards and
+              collections), its crafting recipes, what it is used in, and its live Trading Post buy
+              and sell price.
+            </p>
+            <p>
+              Item metadata comes from the official Guild Wars 2 API; acquisition, salvage and
+              collection data is mirrored from the Guild Wars 2 Wiki.
+            </p>
+          </>
+        ),
+        faqs: [
+          {
+            q: "How do I find where to get an item?",
+            a: 'Open any item and check the Acquisition and "Sold by" sections, which list the vendors, containers, salvage sources and achievements that grant it.',
+          },
+          {
+            q: "Are the Trading Post prices live?",
+            a: "Yes. Buy and sell prices are pulled live from the official Guild Wars 2 Trading Post API each time you open an item.",
+          },
+        ],
+        breadcrumb: BREADCRUMB,
+      }}
       headerRight={
         <Link href="/" className="text-sm text-white/55 transition hover:text-white">
           Back to map
@@ -109,7 +137,6 @@ export default async function ItemsHubPage() {
 
       <Footer />
 
-      <JsonLd data={breadcrumbJsonLd(BREADCRUMB)} />
       <JsonLd data={itemListLd} />
     </PageShell>
   );

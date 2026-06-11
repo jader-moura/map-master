@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import Footer from "@/components/Footer";
 import PageShell from "@/components/PageShell";
 import { ItemCard } from "@/components/ItemCard";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
 import { itemSlug, parseItemId } from "@/lib/gw2/items";
 import {
   achievementById,
@@ -58,6 +56,21 @@ export default async function AchievementPage({ params }: Params) {
   return (
     <PageShell
       title={a.name}
+      seo={{
+        heading: a.name,
+        intro: (
+          <p>
+            {a.name} is {isCollection ? "a collection" : "an achievement"} in Guild Wars 2.
+            {a.requirement ? ` ${a.requirement}` : ""} This page lists the items it{" "}
+            {isCollection ? "contains" : "rewards"}, sourced from the official Guild Wars 2 API.
+          </p>
+        ),
+        breadcrumb: [
+          { name: "Home", path: "/" },
+          { name: "Item Database", path: "/gw2/items" },
+          { name: a.name, path: `/gw2/achievement/${itemSlug(a.id, a.name)}` },
+        ],
+      }}
       headerRight={
         <Link href="/gw2/items" className="text-sm text-white/55 transition hover:text-white">
           Item database
@@ -110,14 +123,6 @@ export default async function AchievementPage({ params }: Params) {
         </article>
 
       <Footer />
-
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "Item Database", path: "/gw2/items" },
-          { name: a.name, path: `/gw2/achievement/${itemSlug(a.id, a.name)}` },
-        ])}
-      />
     </PageShell>
   );
 }
