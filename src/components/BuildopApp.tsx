@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   getBossStatuses,
@@ -660,14 +661,23 @@ export default function BuildopApp() {
                   </button>
                 )}
 
-                <a
-                  href={`https://wiki.guildwars2.com/index.php?search=${encodeURIComponent(selected.name)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block rounded-lg border border-white/10 bg-white/5 py-1.5 text-center text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
-                >
-                  View on GW2 Wiki ↗
-                </a>
+                {selected.kind === "boss" ? (
+                  <Link
+                    href={`/gw2/boss/${selected.boss!.boss.id}`}
+                    className="block rounded-lg border border-orange-400/30 bg-orange-400/10 py-1.5 text-center text-xs font-medium text-orange-300 transition hover:bg-orange-400/20 hover:text-orange-200"
+                  >
+                    Boss timer & details →
+                  </Link>
+                ) : (
+                  <a
+                    href={`https://wiki.guildwars2.com/index.php?search=${encodeURIComponent(selected.name)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-lg border border-white/10 bg-white/5 py-1.5 text-center text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
+                  >
+                    View on GW2 Wiki ↗
+                  </a>
+                )}
               </div>
             </div>
           )}
