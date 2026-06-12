@@ -17,8 +17,10 @@ const ENDPOINT = "https://api.indexnow.org/indexnow";
 const BATCH = 10000; // IndexNow accepts up to 10k URLs per request
 
 const args = new Set(process.argv.slice(2));
-const includeItems = args.has("--items");
-const dryRun = args.has("--dry-run");
+// `npm run seo:indexnow --items` (without `--`) makes npm swallow the flag into
+// npm_config_items instead of passing it through, so honour that too.
+const includeItems = args.has("--items") || Boolean(process.env.npm_config_items);
+const dryRun = args.has("--dry-run") || Boolean(process.env.npm_config_dry_run);
 
 if (!KEY) {
   console.error("Missing INDEXNOW_KEY. Add it to .env.local.");
