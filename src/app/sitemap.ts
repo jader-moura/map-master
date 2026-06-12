@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getSql } from "@/lib/db";
 import { itemSlug } from "@/lib/gw2/items";
+import { BOSSES } from "@/lib/gw2/bosses";
 
 const SITE_URL = "https://buildop.app";
 // Google caps a single sitemap file at 50k URLs; keep chunks well under that.
@@ -48,6 +49,13 @@ export default async function sitemap({
       { url: `${SITE_URL}/contact`, lastModified, changeFrequency: "yearly", priority: 0.3 },
     ];
 
+    const bossUrls: MetadataRoute.Sitemap = BOSSES.map((b) => ({
+      url: `${SITE_URL}/gw2/boss/${b.id}`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.7,
+    }));
+
     const vendors = await sql<{ slug: string }[]>`select slug from vendors order by slug`;
     const vendorUrls: MetadataRoute.Sitemap = vendors.map((v) => ({
       url: `${SITE_URL}/gw2/vendor/${v.slug}`,
@@ -84,7 +92,7 @@ export default async function sitemap({
       priority: 0.4,
     }));
 
-    return [...staticPages, ...vendorUrls, ...achUrls, ...browseUrls];
+    return [...staticPages, ...bossUrls, ...vendorUrls, ...achUrls, ...browseUrls];
   }
 
   // Item chunk (id 1..N).

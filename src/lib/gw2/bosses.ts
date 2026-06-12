@@ -138,6 +138,11 @@ export function getBossStatuses(now: Date = new Date()): BossStatus[] {
   });
 }
 
+/** Status for a single boss relative to `now` (used by per-boss pages). */
+export function getBossStatus(boss: Boss, now: Date = new Date()): BossStatus {
+  return computeStatus(boss, now);
+}
+
 function computeStatus(boss: Boss, now: Date): BossStatus {
   const nowMs = now.getTime();
   const durationMs = boss.durationMin * 60 * 1000;

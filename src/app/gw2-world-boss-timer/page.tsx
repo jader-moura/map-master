@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import BuildopApp from "@/components/BuildopApp";
 import { SeoModal } from "@/components/seo/SeoModal";
 import { BOSSES } from "@/lib/gw2/bosses";
@@ -74,7 +75,11 @@ export default function BossesPage() {
             <tbody className="text-white/75">
               {BOSSES.map((b) => (
                 <tr key={b.id} className="border-b border-white/5 align-top">
-                  <td className="py-2 pr-4 font-medium text-white/90">{b.name}</td>
+                  <td className="py-2 pr-4 font-medium">
+                    <Link href={`/gw2/boss/${b.id}`} className="text-white/90 transition hover:text-orange-400">
+                      {b.name}
+                    </Link>
+                  </td>
                   <td className="py-2 pr-4 text-white/60">{b.zone}</td>
                   <td className="py-2 pr-4 text-white/60">
                     {b.hardcore ? "Hardcore meta" : "World boss"}
