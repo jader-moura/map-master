@@ -10,7 +10,16 @@ import { Icon, P } from "@/components/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { itemListJsonLd } from "@/lib/seo";
 import { itemSlug } from "@/lib/gw2/items";
-import { itemsByNames, vendorBySlug, vendorSales, type DbItem } from "@/lib/gw2/itemsDb";
+import { itemsByNames, listVendors, vendorBySlug, vendorSales, type DbItem } from "@/lib/gw2/itemsDb";
+
+// Vendor pages have no live data; cache daily and prebuild all of them (there
+// are only ~169) so they're statically served and instantly crawlable.
+export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  const vendors = await listVendors().catch(() => []);
+  return vendors.map((v) => ({ slug: v.slug }));
+}
 
 type Params = { params: Promise<{ slug: string }> };
 

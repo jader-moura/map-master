@@ -42,6 +42,11 @@ import {
 // How many "used in" recipes to show (some staples feed hundreds of recipes).
 const USED_IN_LIMIT = 18;
 
+// ISR: cache the rendered page (HTML + the uncached DB lookups) and refresh
+// every 5 minutes. The live Trading Post price is fetched with its own 120s
+// cache, so the displayed price is never more than a few minutes stale.
+export const revalidate = 300;
+
 type Params = { params: Promise<{ slug: string }> };
 
 async function loadItem(slug: string): Promise<Gw2ItemFull | null> {

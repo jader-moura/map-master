@@ -15,6 +15,9 @@ import {
   type DbItem,
 } from "@/lib/gw2/itemsDb";
 
+// Achievement pages have no live data, so cache aggressively (refresh daily).
+export const revalidate = 86400;
+
 type Params = { params: Promise<{ slug: string }> };
 
 async function load(slug: string): Promise<DbAchievement | null> {
