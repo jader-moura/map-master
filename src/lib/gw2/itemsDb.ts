@@ -21,6 +21,28 @@ export async function itemsByIds(ids: number[]): Promise<DbItem[]> {
   return sql<DbItem[]>`select id, name, icon, rarity from items where id in ${sql(ids)}`;
 }
 
+// --- Browse index (crawlable, paginated A–Z listing) ------------------------
+
+export async function countItems(): Promise<number> {
+  const sql = getSql();
+  const [{ n }] = await sql<{ n: number }[]>`
+    select count(*)::int n from items where name is not null and name <> ''
+  `;
+  return n;
+}
+
+/** One page of items ordered alphabetically (for the crawlable browse pages). */
+export async function listItemsPage(offset: number, limit: number): Promise<DbItem[]> {
+  const sql = getSql();
+  return sql<DbItem[]>`
+    select id, name, icon, rarity
+    from items
+    where name is not null and name <> ''
+    order by name, id
+    limit ${limit} offset ${offset}
+  `;
+}
+
 // --- Acquisition (from the wiki sync) ---------------------------------------
 export type SourceRow = {
   source_type: string;

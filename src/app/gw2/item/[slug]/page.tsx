@@ -8,6 +8,8 @@ import { ItemCard } from "@/components/ItemCard";
 import { VendorCard } from "@/components/VendorCard";
 import AchievementRewardList from "@/components/AchievementRewardList";
 import CopyCode from "@/components/CopyCode";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { itemProductJsonLd } from "@/lib/seo";
 import {
   getItem,
   getItemsFull,
@@ -67,7 +69,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title,
     description: desc.slice(0, 160),
     alternates: { canonical },
-    openGraph: { title, description: desc.slice(0, 160), url: `https://buildop.app${canonical}`, images: [item.icon] },
+    // OG image comes from the co-located opengraph-image.tsx (a 1200x630 card).
+    openGraph: { title, description: desc.slice(0, 160), url: `https://buildop.app${canonical}` },
   };
 }
 
@@ -384,6 +387,19 @@ export default async function ItemPage({ params }: Params) {
         </article>
 
       <Footer />
+
+      <JsonLd
+        data={itemProductJsonLd({
+          id: item.id,
+          name: item.name,
+          url: `/gw2/item/${itemSlug(item.id, item.name)}`,
+          image: item.icon,
+          description: description || cleanDescription(item.description),
+          rarity: item.rarity,
+          type: subtype ?? item.type,
+          level: item.level,
+        })}
+      />
     </PageShell>
   );
 }

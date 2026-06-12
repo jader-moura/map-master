@@ -1,30 +1,15 @@
 import type { MetadataRoute } from "next";
-import { getSql } from "@/lib/db";
 
 const SITE_URL = "https://buildop.app";
-const CHUNK = 40000; // keep in sync with sitemap.ts
 
 export const revalidate = 86400;
 
-// `generateSitemaps` splits the sitemap into /sitemap/0.xml, /sitemap/1.xml, …
-// (chunk 0 = static + vendors + achievements; 1..N = items) and does not emit a
-// single /sitemap.xml index, so we list every chunk here for crawlers.
-export default async function robots(): Promise<MetadataRoute.Robots> {
-  const sql = getSql();
-  let itemChunks = 2;
-  try {
-    const [{ n }] = await sql<{ n: number }[]>`
-      select count(*)::int n from items where name is not null and name <> ''
-    `;
-    itemChunks = Math.max(1, Math.ceil(n / CHUNK));
-  } catch {
-    // fall back to a sane default if the DB is briefly unreachable at build
-  }
-  const sitemap = Array.from({ length: itemChunks + 1 }, (_, i) => `${SITE_URL}/sitemap/${i}.xml`);
-
+// We expose a sitemap index at /sitemap_index.xml that references every chunk
+// (generateSitemaps emits /sitemap/0.xml … N.xml but no index of its own).
+export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: "*", allow: "/", disallow: "/api/" }],
-    sitemap,
+    sitemap: `${SITE_URL}/sitemap_index.xml`,
     host: SITE_URL,
   };
 }

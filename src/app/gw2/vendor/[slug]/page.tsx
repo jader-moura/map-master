@@ -7,6 +7,9 @@ import { ItemCard } from "@/components/ItemCard";
 import CopyWaypoint from "@/components/CopyWaypoint";
 import VendorMapView from "@/components/VendorMapView";
 import { Icon, P } from "@/components/icons";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { itemListJsonLd } from "@/lib/seo";
+import { itemSlug } from "@/lib/gw2/items";
 import { itemsByNames, vendorBySlug, vendorSales, type DbItem } from "@/lib/gw2/itemsDb";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -35,6 +38,12 @@ export default async function VendorPage({ params }: Params) {
     ? await itemsByNames(sales.map((s) => s.item_name)).catch(() => [])
     : [];
   const dbByName = new Map<string, DbItem>(dbItems.map((i) => [i.name, i]));
+
+  // Items we can link to, for ItemList structured data.
+  const linkableItems = sales
+    .map((s) => dbByName.get(s.item_name))
+    .filter((it): it is DbItem => Boolean(it))
+    .map((it) => ({ name: it.name, path: `/gw2/item/${itemSlug(it.id, it.name)}` }));
 
   // Locations that have map coordinates, for the small map.
   const mapLocations = vendor.locations
@@ -184,6 +193,16 @@ export default async function VendorPage({ params }: Params) {
         </article>
 
       <Footer />
+
+      {linkableItems.length > 0 && (
+        <JsonLd
+          data={itemListJsonLd(
+            `Items sold by ${vendor.name}`,
+            `/gw2/vendor/${slug}`,
+            linkableItems,
+          )}
+        />
+      )}
     </PageShell>
   );
 }

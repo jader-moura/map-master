@@ -109,6 +109,14 @@ export default async function ItemsHubPage() {
             <ItemSearch />
           </div>
 
+          <p className="mt-5 text-sm text-white/55">
+            Prefer to browse?{" "}
+            <Link href="/gw2/items/all/1" className="text-orange-400 hover:underline">
+              See the full A–Z index of every item
+            </Link>
+            .
+          </p>
+
           <h2 className="mt-12 border-t border-white/10 pt-8 text-xl font-bold">
             Browse by category
           </h2>

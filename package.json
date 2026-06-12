@@ -13,7 +13,8 @@
     "sync:achievements": "node --env-file=.env.local scripts/sync-achievements.mjs",
     "sync:vendor-images": "node --env-file=.env.local scripts/sync-vendor-images.mjs",
     "sync:vendor-locations": "node --env-file=.env.local scripts/sync-vendor-locations.mjs",
-    "sync:achievement-locations": "node --env-file=.env.local scripts/sync-achievement-locations.mjs"
+    "sync:achievement-locations": "node --env-file=.env.local scripts/sync-achievement-locations.mjs",
+    "seo:indexnow": "node --env-file=.env.local scripts/indexnow-submit.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

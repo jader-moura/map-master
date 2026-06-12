@@ -14,8 +14,14 @@ const TYPES = [
   "Bag", "Tool", "Key",
 ];
 
+// Seed the query from `?q=` so deep links and the sitelinks search box work.
+function initialQuery() {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("q") ?? "";
+}
+
 export default function ItemSearch() {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
   const [rarity, setRarity] = useState("");
   const [type, setType] = useState("");
   const [rows, setRows] = useState<Row[]>([]);

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import Footer from "@/components/Footer";
 import PageShell from "@/components/PageShell";
 import { ItemCard } from "@/components/ItemCard";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { itemListJsonLd } from "@/lib/seo";
 import { itemSlug, parseItemId } from "@/lib/gw2/items";
 import {
   achievementById,
@@ -123,6 +125,19 @@ export default async function AchievementPage({ params }: Params) {
         </article>
 
       <Footer />
+
+      {(() => {
+        const all = [...collect, ...rewards];
+        return all.length > 0 ? (
+          <JsonLd
+            data={itemListJsonLd(
+              a.name,
+              `/gw2/achievement/${itemSlug(a.id, a.name)}`,
+              all.map((it) => ({ name: it.name, path: `/gw2/item/${itemSlug(it.id, it.name)}` })),
+            )}
+          />
+        ) : null;
+      })()}
     </PageShell>
   );
 }
