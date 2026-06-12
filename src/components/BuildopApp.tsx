@@ -13,6 +13,7 @@ import {
   type BossStatus,
 } from "@/lib/gw2/bosses";
 import {
+  EVENT_LOCATIONS,
   getAllMetaStatuses,
   getUpcomingMainEvents,
   type MetaEvent,
@@ -667,6 +668,13 @@ export default function BuildopApp() {
                     className="block rounded-lg border border-orange-400/30 bg-orange-400/10 py-1.5 text-center text-xs font-medium text-orange-300 transition hover:bg-orange-400/20 hover:text-orange-200"
                   >
                     Boss timer & details →
+                  </Link>
+                ) : EVENT_LOCATIONS[selected.id] ? (
+                  <Link
+                    href={`/gw2/meta/${selected.id}`}
+                    className="block rounded-lg border border-orange-400/30 bg-orange-400/10 py-1.5 text-center text-xs font-medium text-orange-300 transition hover:bg-orange-400/20 hover:text-orange-200"
+                  >
+                    Meta timer & details →
                   </Link>
                 ) : (
                   <a

@@ -247,6 +247,51 @@ export function getWindowSegments(
   return out;
 }
 
+function fmtUtc(minutes: number): string {
+  const total = ((Math.round(minutes) % DAY_MIN) + DAY_MIN) % DAY_MIN;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/**
+ * Static daily schedule of a meta's main event(s) as UTC times, independent of
+ * "now" (so it can be server-rendered for SEO). Deduplicated and sorted.
+ */
+export function getMainEventTimes(event: MetaEvent): { name: string; time: string }[] {
+  const main = new Set(MAIN_SEGMENTS[event.id] ?? []);
+  const intervals = dayIntervals(event.sequences);
+  const seen = new Set<string>();
+  const out: { name: string; time: string }[] = [];
+  for (const x of intervals) {
+    if (!main.has(x.r)) continue;
+    const time = fmtUtc(x.start);
+    const name = segName(event, x.r) ?? event.name;
+    const key = `${name}@${time}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ name, time });
+  }
+  return out.sort((a, b) => a.time.localeCompare(b.time));
+}
+
+/** Distinct main-event names for a meta (some maps rotate several metas). */
+export function getMainEventNames(event: MetaEvent): string[] {
+  const main = MAIN_SEGMENTS[event.id] ?? [];
+  const names = main.map((r) => segName(event, r)).filter((n): n is string => Boolean(n));
+  return [...new Set(names)];
+}
+
+/** Waypoint chat code of the meta's first main segment, if any. */
+export function getMainWaypoint(event: MetaEvent): string | undefined {
+  const main = MAIN_SEGMENTS[event.id] ?? [];
+  for (const r of main) {
+    const wp = segChatlink(event, r);
+    if (wp) return wp;
+  }
+  return undefined;
+}
+
 /** Upcoming main-event start times for a meta event (for the info panel). */
 export function getUpcomingMainEvents(
   event: MetaEvent,

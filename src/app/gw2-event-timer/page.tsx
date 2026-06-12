@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import TimelineView from "@/components/TimelineView";
 import { SeoModal } from "@/components/seo/SeoModal";
+import { EVENT_LOCATIONS } from "@/lib/gw2/events";
 
 export const metadata: Metadata = {
   title: "GW2 Event Timers | Live Meta Event Timeline",
@@ -64,7 +65,23 @@ export default function TimelinePage() {
           </>
         }
         faqs={FAQS}
-      />
+      >
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-white">Meta events by map</h3>
+          <p className="mt-1 text-sm text-white/50">
+            Open any map for its meta event timer, daily schedule and waypoint.
+          </p>
+          <ul className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            {Object.entries(EVENT_LOCATIONS).map(([id, loc]) => (
+              <li key={id} className="truncate text-sm leading-snug">
+                <Link href={`/gw2/meta/${id}`} className="text-white/75 transition hover:text-orange-400">
+                  {loc.map}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </SeoModal>
     </>
   );
 }
