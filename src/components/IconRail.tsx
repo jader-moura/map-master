@@ -47,6 +47,10 @@ export default function IconRail({
   const pathname = usePathname();
   const seo = useSeoModal();
   const [expanded, setExpanded] = useState(false);
+  // The width transition is enabled only after the saved state is applied, so a
+  // remount on navigation snaps straight to the saved width instead of animating
+  // collapsed -> open (which looked like the rail briefly closing and reopening).
+  const [animate, setAnimate] = useState(false);
 
   // Restore saved state before paint (no flash on navigation).
   useIsomorphicLayoutEffect(() => {
@@ -56,6 +60,13 @@ export default function IconRail({
     } catch {
       /* ignore unavailable storage */
     }
+  }, []);
+
+  // After the first paint (state already applied), allow width animations on
+  // user toggles.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setAnimate(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
   const toggle = () =>
@@ -82,7 +93,8 @@ export default function IconRail({
   return (
     <nav
       className={[
-        "scroll-themed flex shrink-0 flex-col gap-1 overflow-y-auto overflow-x-hidden border-r border-white/10 bg-[#0d0d14] py-3 transition-[width] duration-200",
+        "scroll-themed flex shrink-0 flex-col gap-1 overflow-y-auto overflow-x-hidden border-r border-white/10 bg-[#0d0d14] py-3",
+        animate ? "transition-[width] duration-200" : "",
         expanded ? "w-56 items-stretch px-2" : "w-14 items-center",
       ].join(" ")}
     >
