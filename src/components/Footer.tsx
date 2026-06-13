@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/", label: "Guild Wars 2 Interactive Map" },
   { href: "/gw2-world-boss-timer", label: "GW2 World Boss Timer" },
   { href: "/gw2-world-boss-timeline", label: "GW2 World Boss Timeline" },
+  { href: "/gw2-boss-train", label: "GW2 Boss Train Planner" },
   { href: "/gw2-event-timer", label: "GW2 Event Timer" },
   { href: "/gw2-reset-timer", label: "GW2 Reset Timer" },
   { href: "/gw2-gathering-map", label: "GW2 Gathering Map" },
