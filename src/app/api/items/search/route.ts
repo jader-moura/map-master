@@ -16,6 +16,11 @@ export async function GET(req: NextRequest) {
   const tradable = sp.get("tradable") === "1";
   const page = Math.max(0, Math.floor(Number(sp.get("page") ?? 0)) || 0);
 
+  const lvlMinRaw = sp.get("lvlMin");
+  const lvlMaxRaw = sp.get("lvlMax");
+  const lvlMin = lvlMinRaw ? Math.floor(Number(lvlMinRaw)) : null;
+  const lvlMax = lvlMaxRaw ? Math.floor(Number(lvlMaxRaw)) : null;
+
   const sql = getSql();
   // Fuzzy name ranking when searching; alphabetical otherwise.
   const orderBy = q
@@ -31,6 +36,8 @@ export async function GET(req: NextRequest) {
         ${rarity ? sql`and rarity = ${rarity}` : sql``}
         ${type ? sql`and type = ${type}` : sql``}
         ${tradable ? sql`and tradable = true` : sql``}
+        ${lvlMin != null && Number.isFinite(lvlMin) ? sql`and level >= ${lvlMin}` : sql``}
+        ${lvlMax != null && Number.isFinite(lvlMax) ? sql`and level <= ${lvlMax}` : sql``}
       ${orderBy}
       limit ${PAGE_SIZE} offset ${page * PAGE_SIZE}
     `;
