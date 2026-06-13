@@ -50,6 +50,24 @@ export async function gw2Fetch<T>(
   throw lastErr;
 }
 
+// --- Gem exchange: volatile, cache briefly. ---
+export type GemExchange = {
+  /** Copper per gem at this quantity. */
+  coins_per_gem: number;
+  /** Amount received (gems for the coins endpoint, coins for the gems endpoint). */
+  quantity: number;
+};
+
+/** Exchange coins (copper) for gems: returns gems received + cost per gem. */
+export function getGoldToGems(coins: number) {
+  return gw2Fetch<GemExchange>(`commerce/exchange/coins?quantity=${coins}`, { revalidate: 300 });
+}
+
+/** Exchange gems for coins (copper): returns coins received + value per gem. */
+export function getGemsToGold(gems: number) {
+  return gw2Fetch<GemExchange>(`commerce/exchange/gems?quantity=${gems}`, { revalidate: 300 });
+}
+
 // --- Trading Post: volatile, cache briefly. ---
 export type TpPrice = {
   id: number;

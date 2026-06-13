@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/gw2-reset-timer", label: "GW2 Reset Timer" },
   { href: "/gw2-gathering-map", label: "GW2 Gathering Map" },
   { href: "/gw2-trading-post", label: "GW2 Trading Post Prices" },
+  { href: "/gw2-gems", label: "GW2 Gem to Gold Calculator" },
   { href: "/gw2/items", label: "GW2 Item Database" },
   { href: "/gw2/vendors", label: "GW2 Vendors" },
 ];
