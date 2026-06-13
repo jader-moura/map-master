@@ -320,7 +320,8 @@ export default function BuildopApp() {
   const highlight = mapFilter !== "all" ? MAP_BOUNDS[mapFilter] ?? null : null;
 
   /* ----------------------------- header data ----------------------------- */
-  const activeCount = bossStatuses.filter((s) => s.active).length;
+  const activeBosses = bossStatuses.filter((s) => s.active);
+  const activeCount = activeBosses.length;
   const upcoming = bossStatuses.find((s) => !s.active);
 
   // Favorited bosses/metas, soonest first, for the bell dropdown + badge.
@@ -378,10 +379,29 @@ export default function BuildopApp() {
               </span>
             </div>
           )}
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            <span className="text-xs font-semibold text-white">{ready ? activeCount : "-"} active</span>
-          </div>
+          <button
+            type="button"
+            disabled={activeCount === 0}
+            onClick={() => activeCount > 0 && toggleSelect(activeBosses[0].boss.id)}
+            title={
+              activeCount > 0
+                ? `Active now: ${activeBosses.map((s) => s.boss.name).join(", ")}`
+                : "No world bosses active right now"
+            }
+            className={[
+              "flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 transition",
+              activeCount > 0 ? "hover:border-green-400/40 hover:bg-white/10" : "cursor-default",
+            ].join(" ")}
+          >
+            <span className={["h-2 w-2 rounded-full", activeCount > 0 ? "animate-pulse bg-green-400" : "bg-white/25"].join(" ")} />
+            {ready && activeCount === 1 ? (
+              <span className="hidden max-w-[12rem] truncate text-xs font-semibold text-white sm:inline">
+                {activeBosses[0].boss.name}
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-white">{ready ? activeCount : "-"} active</span>
+            )}
+          </button>
           <div className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 font-mono text-xs text-white/70 sm:block">
             {local} <span className="text-white/40">{utc} UTC</span>
           </div>
