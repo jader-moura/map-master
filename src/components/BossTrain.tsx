@@ -153,7 +153,8 @@ export default function BossTrain() {
   const active = routes.find((r) => r.key === routeKeySel) ?? routes[0];
 
   // Unique boss locations for the chosen route. Memoised on the route key so the
-  // map only refits when the route actually changes, not on every clock tick.
+  // coordinates (and therefore the map view) only change when the route does,
+  // not when a marker is highlighted or turns active.
   const mapLocations = useMemo<VendorMapLocation[]>(() => {
     if (!active) return [];
     const seen = new Set<string>();
@@ -161,16 +162,20 @@ export default function BossTrain() {
     for (const s of active.stops) {
       if (seen.has(s.id)) continue;
       seen.add(s.id);
-      locs.push({ area: s.name, zone: s.zone, coord: s.coord });
+      locs.push({ id: s.id, area: s.name, zone: s.zone, coord: s.coord });
     }
     return locs;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.key]);
 
-  const mapEl = useMemo(
-    () => (mapLocations.length ? <RouteMap locations={mapLocations} /> : null),
-    [mapLocations],
-  );
+  // Which boss markers to highlight (expanded cards) and colour green (live now).
+  const nowMs = now?.getTime() ?? 0;
+  const highlightIds = active
+    ? active.stops.filter((s) => openStops.has(`${s.id}-${s.start}`)).map((s) => s.id)
+    : [];
+  const activeIds = active
+    ? active.stops.filter((s) => s.start <= nowMs && s.end > nowMs).map((s) => s.id)
+    : [];
 
   return (
     <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
@@ -250,7 +255,12 @@ export default function BossTrain() {
                 return (
                   <li
                     key={stopKey}
-                    className="overflow-hidden rounded-xl border border-orange-400/25 bg-orange-400/[0.05]"
+                    className={[
+                      "overflow-hidden rounded-xl border",
+                      isActive
+                        ? "border-green-400/40 bg-green-400/[0.07]"
+                        : "border-orange-400/25 bg-orange-400/[0.05]",
+                    ].join(" ")}
                   >
                     <div className="flex items-center gap-2 p-2.5">
                       <button
@@ -259,7 +269,12 @@ export default function BossTrain() {
                         aria-expanded={open}
                         className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       >
-                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-orange-500 text-xs font-bold text-black">
+                        <span
+                          className={[
+                            "grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold text-black",
+                            isActive ? "bg-green-500" : "bg-orange-500",
+                          ].join(" ")}
+                        >
                           {i + 1}
                         </span>
 
@@ -302,7 +317,7 @@ export default function BossTrain() {
                     </div>
 
                     {open && (
-                      <div className="border-t border-orange-400/15 bg-black/20 px-3 py-3 text-sm">
+                      <div className={["border-t bg-black/20 px-3 py-3 text-sm", isActive ? "border-green-400/15" : "border-orange-400/15"].join(" ")}>
                         <p className="text-white/55">
                           <span className="text-white/40">Location: </span>
                           {c.area}, {c.zone}
@@ -360,7 +375,9 @@ export default function BossTrain() {
       <div className="mt-6 lg:mt-0">
         <div className="overflow-hidden rounded-xl border border-white/10 lg:sticky lg:top-6">
           <div className="h-[360px] lg:h-[calc(100vh-9rem)]">
-            {mapEl ?? (
+            {mapLocations.length ? (
+              <RouteMap locations={mapLocations} highlightIds={highlightIds} activeIds={activeIds} />
+            ) : (
               <div className="grid h-full place-items-center text-sm text-white/35">
                 Pick a window to see the route on the map.
               </div>
