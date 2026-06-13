@@ -168,6 +168,14 @@ export default async function BossPage({ params }: Params) {
 
         <section className="mt-8">
           <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+            <h2 className="text-lg font-semibold text-white">Location</h2>
+            <span className="text-xs text-white/40">{boss.zone}</span>
+          </div>
+          <VendorMapView locations={mapLocations} />
+        </section>
+
+        <section className="mt-9">
+          <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
             <h2 className="text-lg font-semibold text-white">Next spawns</h2>
             <span className="text-xs text-white/40">Your local time</span>
           </div>
@@ -227,14 +235,6 @@ export default async function BossPage({ params }: Params) {
             )}
           </section>
         )}
-
-        <section className="mt-9">
-          <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
-            <h2 className="text-lg font-semibold text-white">Location</h2>
-            <span className="text-xs text-white/40">{boss.zone}</span>
-          </div>
-          <VendorMapView locations={mapLocations} />
-        </section>
 
         <section className="mt-9">
           <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
