@@ -56,7 +56,9 @@ export default function BossesPage() {
             </p>
             <p>
               Click any boss to fly the Tyria map to its location and copy the nearest
-              waypoint chat code. Below is the full daily schedule (all times in UTC).
+              waypoint chat code. Prefer to see the whole day at once? The{" "}
+              <Link href="/gw2-world-boss-timeline" className="text-orange-400 hover:underline">world boss timeline</Link>{" "}
+              lays every spawn out on a single chart. Below is the full daily schedule (all times in UTC).
             </p>
           </>
         }

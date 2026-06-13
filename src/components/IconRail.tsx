@@ -17,6 +17,7 @@ const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffec
 const LINKS = [
   { href: "/", path: P.home, label: "Map" },
   { href: "/gw2-world-boss-timer", path: P.swords, label: "World boss timer" },
+  { href: "/gw2-world-boss-timeline", path: P.timeline, label: "Boss timeline" },
   { href: "/gw2-event-timer", path: P.clock, label: "Event timeline" },
   { href: "/gw2-reset-timer", path: P.refresh, label: "Reset timer" },
   { href: "/gw2-gathering-map", path: P.pickaxe, label: "Gathering map" },
