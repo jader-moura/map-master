@@ -7,6 +7,7 @@ import CopyWaypoint from "@/components/CopyWaypoint";
 import { Icon, P } from "@/components/icons";
 import type { VendorMapLocation } from "@/components/VendorMap";
 import { BOSSES, BOSS_WAYPOINTS, BOSS_LEVELS, formatCountdown } from "@/lib/gw2/bosses";
+import { BOSS_DETAILS } from "@/lib/gw2/bossDetails";
 
 // Leaflet touches `window`, so the map is client-only.
 const RouteMap = dynamic(() => import("@/components/VendorMap"), {
@@ -38,6 +39,7 @@ type Cand = {
   durationMin: number;
   image: string;
   coord: [number, number];
+  times: string[];
   waypoint?: string;
   start: number; // ms epoch
   end: number; // ms epoch
@@ -84,6 +86,7 @@ function buildCandidates(now: Date, windowMin: number): Cand[] {
             durationMin: b.durationMin,
             image: b.image,
             coord: b.coord,
+            times: b.times,
             waypoint: BOSS_WAYPOINTS[b.id],
             start,
             end,
@@ -121,6 +124,15 @@ export default function BossTrain() {
   const [now, setNow] = useState<Date | null>(null);
   const [windowMin, setWindowMin] = useState(120);
   const [routeKeySel, setRouteKeySel] = useState<string | null>(null);
+  const [openStops, setOpenStops] = useState<Set<string>>(new Set());
+
+  const toggleStop = (k: string) =>
+    setOpenStops((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
 
   useEffect(() => {
     setNow(new Date());
@@ -232,50 +244,103 @@ export default function BossTrain() {
               {active.stops.map((c, i) => {
                 const msUntil = c.start - now.getTime();
                 const isActive = msUntil <= 0;
+                const stopKey = `${c.id}-${c.start}`;
+                const open = openStops.has(stopKey);
+                const detail = BOSS_DETAILS[c.id];
                 return (
                   <li
-                    key={`${c.id}-${c.start}`}
-                    className="flex items-center gap-3 rounded-xl border border-orange-400/25 bg-orange-400/[0.05] p-2.5"
+                    key={stopKey}
+                    className="overflow-hidden rounded-xl border border-orange-400/25 bg-orange-400/[0.05]"
                   >
-                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-orange-500 text-xs font-bold text-black">
-                      {i + 1}
-                    </span>
-
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={c.image}
-                      alt={c.name}
-                      width={72}
-                      height={48}
-                      className="h-12 w-[72px] shrink-0 rounded-md border border-white/10 object-cover"
-                    />
-
-                    <div className="min-w-0 flex-1">
-                      <Link
-                        href={`/gw2/boss/${c.id}`}
-                        className="block truncate font-medium text-white/90 transition hover:text-orange-400"
+                    <div className="flex items-center gap-2 p-2.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleStop(stopKey)}
+                        aria-expanded={open}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       >
-                        {c.name}
-                      </Link>
-                      <p className="truncate text-xs text-white/45">{c.zone}</p>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-white/40">
-                        <span>{c.hardcore ? "Hardcore" : "World boss"}</span>
-                        {c.level > 0 && <span>· Lvl {c.level}</span>}
-                        <span>· {c.durationMin}m</span>
-                        {c.hardcore && <span className="text-purple-300/80">· squad</span>}
-                      </p>
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-orange-500 text-xs font-bold text-black">
+                          {i + 1}
+                        </span>
+
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={c.image}
+                          alt={c.name}
+                          width={72}
+                          height={48}
+                          className="h-12 w-[72px] shrink-0 rounded-md border border-white/10 object-cover"
+                        />
+
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-white/90">{c.name}</p>
+                          <p className="truncate text-xs text-white/45">{c.zone}</p>
+                          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-white/40">
+                            <span>{c.hardcore ? "Hardcore" : "World boss"}</span>
+                            {c.level > 0 && <span>· Lvl {c.level}</span>}
+                            <span>· {c.durationMin}m</span>
+                            {c.hardcore && <span className="text-purple-300/80">· squad</span>}
+                          </p>
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          <p className="font-mono text-sm font-semibold text-white">
+                            {new Date(c.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                          <p className={["text-xs", isActive ? "text-green-400" : "text-white/45"].join(" ")}>
+                            {isActive ? "active now" : `in ${formatCountdown(msUntil)}`}
+                          </p>
+                        </div>
+
+                        <Icon
+                          path={P.chevron}
+                          className={["h-4 w-4 shrink-0 text-white/40 transition-transform", open ? "rotate-180" : ""].join(" ")}
+                        />
+                      </button>
+
+                      {c.waypoint && <CopyWaypoint code={c.waypoint} compact />}
                     </div>
 
-                    <div className="shrink-0 text-right">
-                      <p className="font-mono text-sm font-semibold text-white">
-                        {new Date(c.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                      <p className={["text-xs", isActive ? "text-green-400" : "text-white/45"].join(" ")}>
-                        {isActive ? "active now" : `in ${formatCountdown(msUntil)}`}
-                      </p>
-                    </div>
+                    {open && (
+                      <div className="border-t border-orange-400/15 bg-black/20 px-3 py-3 text-sm">
+                        <p className="text-white/55">
+                          <span className="text-white/40">Location: </span>
+                          {c.area}, {c.zone}
+                        </p>
 
-                    {c.waypoint && <CopyWaypoint code={c.waypoint} compact />}
+                        <div className="mt-2.5">
+                          <p className="text-[11px] uppercase tracking-wide text-white/35">Daily spawns (UTC)</p>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {c.times.map((t) => (
+                              <span key={t} className="rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[11px] tabular-nums text-white/60">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {detail?.howToStart && (
+                          <p className="mt-2.5 leading-relaxed text-white/60">
+                            <span className="text-white/40">How to start: </span>
+                            {detail.howToStart}
+                          </p>
+                        )}
+                        {detail?.tips && (
+                          <p className="mt-2 leading-relaxed text-white/55">
+                            <span className="font-medium text-white/75">Tip: </span>
+                            {detail.tips}
+                          </p>
+                        )}
+
+                        <Link
+                          href={`/gw2/boss/${c.id}`}
+                          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/80 transition hover:border-orange-400/40 hover:text-white"
+                        >
+                          Open boss page
+                          <Icon path={P.chevron} className="h-3.5 w-3.5 -rotate-90" />
+                        </Link>
+                      </div>
+                    )}
                   </li>
                 );
               })}
