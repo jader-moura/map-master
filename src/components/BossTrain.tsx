@@ -159,11 +159,11 @@ export default function BossTrain() {
     if (!active) return [];
     const seen = new Set<string>();
     const locs: VendorMapLocation[] = [];
-    for (const s of active.stops) {
-      if (seen.has(s.id)) continue;
+    active.stops.forEach((s, idx) => {
+      if (seen.has(s.id)) return;
       seen.add(s.id);
-      locs.push({ id: s.id, area: s.name, zone: s.zone, coord: s.coord });
-    }
+      locs.push({ id: s.id, label: String(idx + 1), area: s.name, zone: s.zone, coord: s.coord });
+    });
     return locs;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.key]);
@@ -210,37 +210,37 @@ export default function BossTrain() {
         ) : (
           <>
             {routes.length > 1 ? (
-              <div className="mt-5">
-                <p className="mb-2 text-sm text-white/50">
-                  {routes.length} routes in this window. Taking a hardcore boss means giving up a
-                  standard one at the same time:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {routes.map((r) => {
-                    const sel = r.key === active.key;
-                    return (
-                      <button
-                        key={r.key}
-                        type="button"
-                        onClick={() => setRouteKeySel(r.key)}
-                        className={[
-                          "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition",
-                          sel
-                            ? "border-orange-400/50 bg-orange-400/15 text-orange-200"
-                            : "border-white/10 bg-white/[0.04] text-white/70 hover:text-white",
-                        ].join(" ")}
-                      >
-                        {r.hardcore && <span className="h-2 w-2 rounded-full bg-purple-400" />}
-                        <span>{r.name}</span>
-                        <span className={sel ? "text-orange-300/70" : "text-white/35"}>· {r.stops.length}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="mt-4 flex flex-wrap items-center gap-1.5">
+                <span
+                  className="mr-0.5 text-[11px] uppercase tracking-wide text-white/35"
+                  title="Standard bosses never overlap; taking a hardcore boss means giving up the standard one at that time."
+                >
+                  Route
+                </span>
+                {routes.map((r) => {
+                  const sel = r.key === active.key;
+                  return (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => setRouteKeySel(r.key)}
+                      className={[
+                        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition",
+                        sel
+                          ? "border-orange-400/50 bg-orange-400/15 text-orange-200"
+                          : "border-white/10 bg-white/[0.04] text-white/65 hover:text-white",
+                      ].join(" ")}
+                    >
+                      {r.hardcore && <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />}
+                      <span>{r.name}</span>
+                      <span className={sel ? "text-orange-300/70" : "text-white/35"}>{r.stops.length}</span>
+                    </button>
+                  );
+                })}
               </div>
             ) : (
-              <p className="mt-5 text-sm text-white/55">
-                One optimal route in this window, no timing conflicts. You can hit all{" "}
+              <p className="mt-4 text-xs text-white/45">
+                One route, no conflicts, all{" "}
                 <span className="font-semibold text-orange-300">{active.stops.length}</span> bosses.
               </p>
             )}
