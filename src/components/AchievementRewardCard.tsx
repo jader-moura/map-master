@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon, P } from "@/components/icons";
 import { itemSlug } from "@/lib/gw2/items";
+import { usePersistentState } from "@/lib/usePersistentState";
 import {
   matchBoss,
   getBossStatuses,
@@ -43,6 +44,36 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
 
   const href = `/gw2/achievement/${itemSlug(a.id, a.name)}`;
   const mapLocs = loc?.coord ? [{ area: loc.name, zone: loc.zone, coord: loc.coord }] : [];
+
+  // Boss favourites share the same store as the world boss timer, so starring a
+  // boss here makes it show up (and alert) there too.
+  const [favList, setFavList] = usePersistentState<string[]>("buildop:favorites", []);
+  const isFav = boss ? favList.includes(boss.id) : false;
+  const toggleFav = () => {
+    if (!boss) return;
+    setFavList((list) => (list.includes(boss.id) ? list.filter((x) => x !== boss.id) : [...list, boss.id]));
+  };
+
+  // Event-completion achievements: how many events are needed lives in the
+  // achievement's tiers (the API blanks the count out of the requirement text),
+  // so fetch it lazily from the GW2 API the first time the card is expanded.
+  const isEventAch = !boss && /\bevents?\b/i.test(`${a.name} ${a.requirement ?? ""}`);
+  const [eventCount, setEventCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open || !isEventAch || eventCount !== null) return;
+    let cancelled = false;
+    fetch(`https://api.guildwars2.com/v2/achievements/${a.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { tiers?: { count: number }[] } | null) => {
+        if (!cancelled && d?.tiers?.length) {
+          setEventCount(Math.max(...d.tiers.map((t) => t.count)));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, isEventAch, a.id, eventCount]);
 
   // Live clock for the boss spawn countdown — only ticks while expanded.
   const [now, setNow] = useState<Date | null>(null);
@@ -84,15 +115,38 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white/85">{a.name}</p>
             {req && <p className="mt-0.5 text-xs leading-relaxed text-white/45">{req}</p>}
-            {loc && (
-              <span className="mt-1 inline-flex items-center gap-1 text-xs text-white/40">
-                <Icon path={P.pin} className="h-3 w-3" />
-                {[loc.name, loc.zone].filter(Boolean).join(", ")}
-              </span>
-            )}
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              {loc && (
+                <span className="inline-flex items-center gap-1 text-xs text-white/40">
+                  <Icon path={P.pin} className="h-3 w-3" />
+                  {[loc.name, loc.zone].filter(Boolean).join(", ")}
+                </span>
+              )}
+              {isEventAch && eventCount != null && (
+                <span className="inline-flex items-center gap-1 text-xs text-white/40">
+                  <Icon path={P.check} className="h-3 w-3" />
+                  {eventCount} events
+                </span>
+              )}
+            </div>
           </div>
         </button>
         <div className="flex items-center gap-1 pr-2">
+          {boss && (
+            <button
+              type="button"
+              onClick={toggleFav}
+              aria-pressed={isFav}
+              title={isFav ? "Remove from favorites" : "Add boss to favorites"}
+              aria-label={isFav ? "Remove boss from favorites" : "Add boss to favorites"}
+              className={[
+                "grid h-8 w-7 place-items-center transition",
+                isFav ? "text-amber-400" : "text-white/30 hover:text-white/70",
+              ].join(" ")}
+            >
+              <Icon path={P.star} className="h-4 w-4" fill={isFav ? "currentColor" : "none"} />
+            </button>
+          )}
           {loc?.chat && <CopyWaypoint code={loc.chat} compact />}
           <button
             type="button"
@@ -107,6 +161,12 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
 
       {open && (
         <div className="border-t border-white/10 p-3">
+          {isEventAch && eventCount != null && (
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-sm text-white/75">
+              <Icon path={P.check} className="h-4 w-4 text-orange-300" />
+              Complete <span className="font-semibold text-white">{eventCount}</span> events to earn this
+            </p>
+          )}
           {boss && (
             <div className="mb-3 flex flex-col overflow-hidden rounded-xl border border-white/10 sm:flex-row">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -160,6 +220,22 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {loc?.chat && (
               <CopyWaypoint code={loc.chat} label={loc.waypoint ? `Copy ${loc.waypoint}` : "Copy waypoint"} />
+            )}
+            {boss && (
+              <button
+                type="button"
+                onClick={toggleFav}
+                aria-pressed={isFav}
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition",
+                  isFav
+                    ? "border-amber-400/40 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20"
+                    : "border-white/15 bg-white/5 text-white/75 hover:border-amber-400/40 hover:text-white",
+                ].join(" ")}
+              >
+                <Icon path={P.star} className="h-3.5 w-3.5" fill={isFav ? "currentColor" : "none"} />
+                {isFav ? "Favorited" : "Favorite boss"}
+              </button>
             )}
             {boss && (
               <Link
