@@ -73,7 +73,7 @@ export default function BossTrainPage() {
         </Link>
       }
     >
-      <article className="mx-auto max-w-3xl px-5 py-10">
+      <article className="mx-auto max-w-6xl px-5 py-10">
         <nav aria-label="Breadcrumb" className="mb-4 text-xs text-white/40">
           <Link href="/" className="transition hover:text-orange-400">Home</Link>
           <span className="px-1.5">/</span>
