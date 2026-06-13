@@ -35,10 +35,12 @@ export default function BossTrainPage() {
               actually chain in your chosen window.
             </p>
             <p>
-              Pick a time window, then follow the highlighted itinerary in order. Each stop links to
-              the boss page and offers its nearest waypoint chat code, so you can paste it straight
-              into game chat and teleport. Greyed-out spawns are ones that overlap a boss already in
-              your train.
+              The standard world bosses are phased so they never overlap, so the route only really
+              forks around the hardcore bosses (Tequatl, the Triple Trouble wurm and the Karka
+              Queen), whose spawns land on top of a standard boss and force an either/or. The planner
+              offers a &ldquo;most bosses&rdquo; run plus a route built around each hardcore boss, so
+              you can pick the train you want. Each stop links to the boss page and offers its
+              nearest waypoint chat code to paste straight into game chat.
             </p>
           </>
         ),
@@ -49,7 +51,11 @@ export default function BossTrainPage() {
           },
           {
             q: "How does the boss train planner decide the order?",
-            a: "It lists every spawn in your chosen window and greedily picks the boss that finishes earliest at each step. That's the optimal strategy for attending the maximum number of bosses without time conflicts.",
+            a: "It lists every spawn in your chosen window and greedily picks the boss that finishes earliest at each step, which is the optimal strategy for attending the maximum number of bosses without time conflicts.",
+          },
+          {
+            q: "Why are there different boss train routes?",
+            a: "The standard world bosses are spaced so they never overlap, but the hardcore bosses (Tequatl, Triple Trouble, Karka Queen) spawn at the same time as some standard bosses. Taking a hardcore boss means skipping the standard one at that time, so the planner offers a route for each choice.",
           },
           {
             q: "Can I really attend that many bosses in a row?",
