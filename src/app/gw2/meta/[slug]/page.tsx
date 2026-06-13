@@ -56,6 +56,7 @@ export default async function MetaPage({ params }: Params) {
   const category = event?.category || "";
   const mapLocations = [{ area: loc.map, zone: category || null, coord: loc.coord }];
   const namesLabel = names.length ? names.join(", ") : "a map-wide meta event";
+  const otherMetas = Object.entries(EVENT_LOCATIONS).filter(([id]) => id !== slug);
 
   return (
     <PageShell
@@ -171,6 +172,23 @@ export default async function MetaPage({ params }: Params) {
             </div>
           </section>
         )}
+
+        <section className="mt-9">
+          <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+            <h2 className="text-lg font-semibold text-white">More meta events</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {otherMetas.map(([id, l]) => (
+              <Link
+                key={id}
+                href={`/gw2/meta/${id}`}
+                className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/70 transition hover:border-orange-400/40 hover:text-white"
+              >
+                {l.map}
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <p className="mt-10 border-t border-white/10 pt-5 text-xs text-white/35">
           Meta event schedule from the Guild Wars 2 Wiki; map tiles from the official Guild Wars 2 API.
