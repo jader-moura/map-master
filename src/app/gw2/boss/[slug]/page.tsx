@@ -4,9 +4,14 @@ import { notFound } from "next/navigation";
 import Footer from "@/components/Footer";
 import PageShell from "@/components/PageShell";
 import BossCountdown from "@/components/BossCountdown";
+import BossNextSpawns from "@/components/BossNextSpawns";
 import CopyWaypoint from "@/components/CopyWaypoint";
 import VendorMapView from "@/components/VendorMapView";
+import { ItemCard } from "@/components/ItemCard";
 import { BOSSES, BOSS_WAYPOINTS, BOSS_LEVELS, type Boss } from "@/lib/gw2/bosses";
+import { BOSS_DETAILS } from "@/lib/gw2/bossDetails";
+import { achievementsByIds, itemsByNames, type DbItem } from "@/lib/gw2/itemsDb";
+import { itemSlug } from "@/lib/gw2/items";
 
 const SITE_URL = "https://buildop.app";
 
@@ -52,6 +57,19 @@ export default async function BossPage({ params }: Params) {
   const level = BOSS_LEVELS[boss.id];
   const kind = boss.hardcore ? "Hardcore meta boss" : "World boss";
   const mapLocations = [{ area: boss.area, zone: boss.zone, coord: boss.coord }];
+
+  const detail = BOSS_DETAILS[boss.id];
+  const [dropRows, achievements] = await Promise.all([
+    detail?.drops.length ? itemsByNames(detail.drops).catch(() => [] as DbItem[]) : Promise.resolve([] as DbItem[]),
+    detail?.achievements.length ? achievementsByIds(detail.achievements).catch(() => []) : Promise.resolve([]),
+  ]);
+  // Preserve the curated order and drop any names not found in the DB.
+  const dropByName = new Map(dropRows.map((i) => [i.name, i]));
+  const drops = (detail?.drops ?? [])
+    .map((n) => dropByName.get(n))
+    .filter((i): i is DbItem => Boolean(i));
+
+  const otherBosses = BOSSES.filter((b) => b.id !== boss.id);
 
   return (
     <PageShell
@@ -148,6 +166,68 @@ export default async function BossPage({ params }: Params) {
           </div>
         </div>
 
+        <section className="mt-8">
+          <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+            <h2 className="text-lg font-semibold text-white">Next spawns</h2>
+            <span className="text-xs text-white/40">Your local time</span>
+          </div>
+          <BossNextSpawns times={boss.times} />
+        </section>
+
+        {drops.length > 0 && (
+          <section className="mt-9">
+            <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+              <h2 className="text-lg font-semibold text-white">Notable drops</h2>
+              <span className="text-xs text-white/40">Open any item for its live price</span>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {drops.map((it) => (
+                <ItemCard key={it.id} id={it.id} name={it.name} icon={it.icon ?? undefined} rarity={it.rarity ?? undefined} />
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-white/40">
+              Plus the daily bonus chest (a guaranteed rare or exotic) and a ground chest with Dragonite Ore.
+            </p>
+          </section>
+        )}
+
+        {achievements.length > 0 && (
+          <section className="mt-9">
+            <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+              <h2 className="text-lg font-semibold text-white">Achievements</h2>
+              <span className="text-xs text-white/40">{achievements.length}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {achievements.map((a) => (
+                <Link
+                  key={a.id}
+                  href={`/gw2/achievement/${itemSlug(a.id, a.name)}`}
+                  className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/75 transition hover:border-orange-400/40 hover:text-white"
+                >
+                  {a.name}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(detail?.howToStart || detail?.tips) && (
+          <section className="mt-9">
+            <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+              <h2 className="text-lg font-semibold text-white">How to start &amp; tips</h2>
+            </div>
+            {detail.howToStart && (
+              <p className="text-[15px] leading-relaxed text-white/70">{detail.howToStart}</p>
+            )}
+            {detail.tips && (
+              <p className="mt-3 text-[15px] leading-relaxed text-white/60">
+                <span className="font-medium text-white/80">Tip: </span>
+                {detail.tips}
+              </p>
+            )}
+          </section>
+        )}
+
         <section className="mt-9">
           <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
             <h2 className="text-lg font-semibold text-white">Location</h2>
@@ -178,6 +258,23 @@ export default async function BossPage({ params }: Params) {
             </Link>{" "}
             for every boss at once, with live countdowns and map.
           </p>
+        </section>
+
+        <section className="mt-9">
+          <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+            <h2 className="text-lg font-semibold text-white">More world boss timers</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {otherBosses.map((b) => (
+              <Link
+                key={b.id}
+                href={`/gw2/boss/${b.id}`}
+                className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/70 transition hover:border-orange-400/40 hover:text-white"
+              >
+                {b.name}
+              </Link>
+            ))}
+          </div>
         </section>
 
         <p className="mt-10 border-t border-white/10 pt-5 text-xs text-white/35">

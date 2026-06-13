@@ -171,6 +171,17 @@ export async function achievementById(id: number): Promise<DbAchievement | null>
   return rows[0] ?? null;
 }
 
+/** Minimal achievement rows by id, preserving the requested order. */
+export async function achievementsByIds(ids: number[]): Promise<{ id: number; name: string }[]> {
+  if (!ids.length) return [];
+  const sql = getSql();
+  const rows = await sql<{ id: number; name: string }[]>`
+    select id, name from achievements where id in ${sql(ids)} and name is not null
+  `;
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return ids.map((id) => byId.get(id)).filter((r): r is { id: number; name: string } => Boolean(r));
+}
+
 /** Item ids tied to an achievement, by role ('collect' | 'reward'). */
 export async function achievementItemIds(id: number, role: string): Promise<number[]> {
   const sql = getSql();
