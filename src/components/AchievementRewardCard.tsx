@@ -171,11 +171,27 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
 
       {open && (
         <div className="border-t border-white/10 p-3">
-          {isEventAch && eventCount != null && (
-            <p className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-sm text-white/75">
-              <Icon path={P.check} className="h-4 w-4 text-orange-300" />
-              Complete <span className="font-semibold text-white">{eventCount}</span> events to earn this
-            </p>
+          {isEventAch && (eventCount != null || eventMaps.length > 0) && (
+            <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-sm">
+              <p className="inline-flex items-center gap-1.5 text-white/75">
+                <Icon path={P.check} className="h-4 w-4 text-orange-300" />
+                {eventCount != null ? (
+                  <span>
+                    Complete <span className="font-semibold text-white">{eventCount}</span> event
+                    {eventCount === 1 ? "" : "s"} to earn this
+                  </span>
+                ) : (
+                  <span>Complete events to earn this</span>
+                )}
+              </p>
+              {eventMaps.length > 0 && (
+                <p className="mt-1 text-xs leading-relaxed text-white/45">
+                  Any dynamic event counts, there&apos;s no specific one. Roam the
+                  {eventMaps.length === 1 ? " map" : " maps"} highlighted below and complete whatever
+                  events you find.
+                </p>
+              )}
+            </div>
           )}
           {boss && (
             <div className="mb-3 flex flex-col overflow-hidden rounded-xl border border-white/10 sm:flex-row">
@@ -230,7 +246,7 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
           {eventMaps.length > 0 && (
             <div className="mt-3">
               <p className="mb-1.5 text-xs uppercase tracking-wide text-white/35">
-                Waypoints to event maps
+                Jump to a map &amp; do any events
               </p>
               <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {eventMaps.map((m) => (
