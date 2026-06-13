@@ -13,6 +13,24 @@ export type BossDetail = {
   tips?: string;
 };
 
+// Reward components common to world bosses. These are the qualitative pieces of
+// what a boss pays out (the exact contents vary and most are account-bound), so
+// we describe them rather than inventing drop rates. The tradable item value is
+// computed separately from live Trading Post prices on the boss page.
+export function bossRewards(boss: { hardcore: boolean }): string[] {
+  const base = [
+    "A guaranteed once-per-day bonus reward chest: a rare or better item plus a little coin and karma.",
+    "An on-the-ground reward chest looted where the boss falls.",
+    "Champion and veteran loot bags dropped by adds during the event.",
+  ];
+  if (boss.hardcore) {
+    base.push(
+      "Extra bonus chests for hardcore meta bosses, with a chance at ascended-tier materials and unique rewards.",
+    );
+  }
+  return base;
+}
+
 const DRAGONITE = "Dragonite Ore";
 
 export const BOSS_DETAILS: Record<string, BossDetail> = {

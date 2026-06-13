@@ -8,9 +8,11 @@ import BossNextSpawns from "@/components/BossNextSpawns";
 import CopyWaypoint from "@/components/CopyWaypoint";
 import VendorMapView from "@/components/VendorMapView";
 import { ItemCard } from "@/components/ItemCard";
+import { Coins } from "@/components/Coins";
 import { BOSSES, BOSS_WAYPOINTS, BOSS_LEVELS, type Boss } from "@/lib/gw2/bosses";
-import { BOSS_DETAILS } from "@/lib/gw2/bossDetails";
+import { BOSS_DETAILS, bossRewards } from "@/lib/gw2/bossDetails";
 import { achievementsByIds, itemsByNames, type DbItem } from "@/lib/gw2/itemsDb";
+import { getPrices } from "@/lib/gw2/api";
 import { itemSlug } from "@/lib/gw2/items";
 
 const SITE_URL = "https://buildop.app";
@@ -69,6 +71,19 @@ export default async function BossPage({ params }: Params) {
     .map((n) => dropByName.get(n))
     .filter((i): i is DbItem => Boolean(i));
 
+  // Live Trading Post value of the tradable drops. getPrices only returns
+  // entries for items that are actually on the TP, so anything missing is
+  // account-bound and simply omitted from the value breakdown.
+  const prices = drops.length
+    ? await getPrices(drops.map((d) => d.id)).catch(() => [])
+    : [];
+  const priceById = new Map(prices.map((p) => [p.id, p]));
+  const tradableDrops = drops
+    .map((d) => ({ item: d, sell: priceById.get(d.id)?.sells.unit_price ?? 0 }))
+    .filter((x) => x.sell > 0);
+  const tradableTotal = tradableDrops.reduce((sum, x) => sum + x.sell, 0);
+
+  const rewards = bossRewards(boss);
   const otherBosses = BOSSES.filter((b) => b.id !== boss.id);
 
   return (
@@ -193,11 +208,55 @@ export default async function BossPage({ params }: Params) {
                 <ItemCard key={it.id} id={it.id} name={it.name} icon={it.icon ?? undefined} rarity={it.rarity ?? undefined} />
               ))}
             </div>
-            <p className="mt-2 text-xs text-white/40">
-              Plus the daily bonus chest (a guaranteed rare or exotic) and a ground chest with Dragonite Ore.
-            </p>
           </section>
         )}
+
+        <section className="mt-9">
+          <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-white/10 pb-2">
+            <h2 className="text-lg font-semibold text-white">Rewards &amp; loot value</h2>
+            <span className="text-xs text-white/40">What you get per run</span>
+          </div>
+
+          <ul className="space-y-1.5 text-[15px] leading-relaxed text-white/70">
+            {rewards.map((r) => (
+              <li key={r} className="flex gap-2">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-400/70" />
+                <span>{r}</span>
+              </li>
+            ))}
+          </ul>
+
+          {tradableDrops.length > 0 && (
+            <div className="mt-5 overflow-hidden rounded-xl border border-white/10">
+              <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-4 py-2.5">
+                <span className="text-sm font-medium text-white/80">Tradable drops</span>
+                <span className="text-xs text-white/40">Trading Post sell price</span>
+              </div>
+              <ul>
+                {tradableDrops.map(({ item, sell }) => (
+                  <li key={item.id} className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-2 last:border-0">
+                    <Link href={`/gw2/item/${itemSlug(item.id, item.name)}`} className="truncate text-sm text-white/75 transition hover:text-orange-400">
+                      {item.name}
+                    </Link>
+                    <Coins value={sell} />
+                  </li>
+                ))}
+                {tradableDrops.length > 1 && (
+                  <li className="flex items-center justify-between gap-3 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-white">
+                    <span>Combined sell value</span>
+                    <Coins value={tradableTotal} />
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          <p className="mt-2 text-xs text-white/40">
+            Drops are not guaranteed, so this is the current Trading Post sell value of the tradable
+            items above, not a per-kill average. Account-bound rewards (tokens, map currency, the
+            bonus chest contents) are not priced.
+          </p>
+        </section>
 
         {achievements.length > 0 && (
           <section className="mt-9">
