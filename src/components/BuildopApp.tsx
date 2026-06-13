@@ -322,6 +322,13 @@ export default function BuildopApp() {
   /* ----------------------------- header data ----------------------------- */
   const activeCount = bossStatuses.filter((s) => s.active).length;
   const upcoming = bossStatuses.find((s) => !s.active);
+
+  // Favorited bosses/metas, soonest first, for the bell dropdown + badge.
+  const favoriteItems = useMemo(
+    () => items.filter((i) => favorites.has(i.id)),
+    [items, favorites],
+  );
+  const liveFavCount = favoriteItems.filter((i) => i.active).length;
   const local = now ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--";
   const utc = now
     ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
@@ -390,8 +397,19 @@ export default function BuildopApp() {
             aria-label="Notifications"
           >
             <Icon path={P.bell} />
-            {notif.enabled && (
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0d0d14]" />
+            {favoriteItems.length > 0 ? (
+              <span
+                className={[
+                  "absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold leading-none ring-2 ring-[#0d0d14]",
+                  liveFavCount > 0 ? "bg-green-500 text-black" : "bg-orange-500 text-black",
+                ].join(" ")}
+              >
+                {liveFavCount > 0 ? liveFavCount : favoriteItems.length}
+              </span>
+            ) : (
+              notif.enabled && (
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-[#0d0d14]" />
+              )
             )}
           </button>
 
@@ -403,6 +421,44 @@ export default function BuildopApp() {
                   <Icon path={P.close} className="h-4 w-4" />
                 </button>
               </div>
+
+              {/* Favorited bosses & metas with their next spawn time. */}
+              {favoriteItems.length > 0 ? (
+                <ul className="scroll-themed mb-3 max-h-64 space-y-0.5 overflow-y-auto border-b border-white/10 pb-3">
+                  {favoriteItems.map((i) => (
+                    <li key={i.id}>
+                      <button
+                        onClick={() => { toggleSelect(i.id); setNotifOpen(false); }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/5"
+                      >
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: i.color }} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-white/85">{i.name}</span>
+                          <span className="block truncate text-[11px] text-white/40">{i.map}</span>
+                        </span>
+                        {i.active ? (
+                          <span className="shrink-0 rounded-md bg-green-500/15 px-1.5 py-0.5 text-[11px] font-semibold text-green-400">
+                            Active{i.mainMs > 0 ? ` · ${formatCountdown(i.mainMs)}` : ""}
+                          </span>
+                        ) : (
+                          <span className="shrink-0 text-right">
+                            <span className="block font-mono text-xs font-semibold text-orange-400">
+                              {formatCountdown(i.mainMs)}
+                            </span>
+                            {i.atLabel && <span className="block text-[11px] text-white/40">{i.atLabel}</span>}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mb-3 border-b border-white/10 pb-3 text-[12px] leading-relaxed text-white/45">
+                  Star a boss or meta event (<span className="text-amber-400">★</span>) to track its next
+                  spawn time here.
+                </p>
+              )}
+
               <label className="flex items-center justify-between py-2">
                 <span className="text-sm text-white/80">Enable alerts</span>
                 <button
