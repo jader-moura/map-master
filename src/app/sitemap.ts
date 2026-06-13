@@ -40,6 +40,7 @@ export default async function sitemap({
       { url: `${SITE_URL}/`, lastModified, changeFrequency: "daily", priority: 1 },
       { url: `${SITE_URL}/gw2-world-boss-timer`, lastModified, changeFrequency: "daily", priority: 0.9 },
       { url: `${SITE_URL}/gw2-event-timer`, lastModified, changeFrequency: "daily", priority: 0.8 },
+      { url: `${SITE_URL}/gw2-reset-timer`, lastModified, changeFrequency: "daily", priority: 0.8 },
       { url: `${SITE_URL}/gw2-gathering-map`, lastModified, changeFrequency: "weekly", priority: 0.7 },
       { url: `${SITE_URL}/gw2-trading-post`, lastModified, changeFrequency: "hourly", priority: 0.7 },
       { url: `${SITE_URL}/gw2/items`, lastModified, changeFrequency: "weekly", priority: 0.7 },

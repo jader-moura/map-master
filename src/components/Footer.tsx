@@ -6,9 +6,11 @@ const LINKS = [
   { href: "/", label: "Guild Wars 2 Interactive Map" },
   { href: "/gw2-world-boss-timer", label: "GW2 World Boss Timer" },
   { href: "/gw2-event-timer", label: "GW2 Event Timer" },
+  { href: "/gw2-reset-timer", label: "GW2 Reset Timer" },
   { href: "/gw2-gathering-map", label: "GW2 Gathering Map" },
   { href: "/gw2-trading-post", label: "GW2 Trading Post Prices" },
   { href: "/gw2/items", label: "GW2 Item Database" },
+  { href: "/gw2/vendors", label: "GW2 Vendors" },
 ];
 
 export default function Footer() {
