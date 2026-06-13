@@ -72,8 +72,8 @@ export default function GemCalculator({
           />
           <StepButton label="Increase gold" icon={P.plus} onClick={() => stepGold(10)} />
         </div>
-        <p className="mt-4 text-2xl font-bold tabular-nums text-orange-300">
-          {gemsFromGold.toLocaleString()} <span className="text-base font-medium text-white/60">gems</span>
+        <p className="mt-4 flex items-center gap-2 text-2xl font-bold tabular-nums text-orange-300">
+          {gemsFromGold.toLocaleString()} <GemIcon className="h-6 w-6" />
         </p>
       </div>
 
