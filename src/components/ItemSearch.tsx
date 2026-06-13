@@ -41,7 +41,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none rounded-lg border border-white/10 bg-white/[0.04] py-2.5 pl-8 pr-8 text-sm text-white/80 [color-scheme:dark] focus:border-orange-400/40 focus:outline-none"
+        className="h-10 appearance-none rounded-lg border border-white/10 bg-white/[0.04] pl-8 pr-8 text-sm text-white/80 [color-scheme:dark] focus:border-orange-400/40 focus:outline-none"
       >
         {children}
       </select>
@@ -174,7 +174,7 @@ export default function ItemSearch() {
         </FilterSelect>
 
         {/* Level range */}
-        <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-sm text-white/70">
+        <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-sm text-white/70 h-10">
           <Icon path={P.bolt} className="h-4 w-4 text-white/35" />
           <input
             type="number"
