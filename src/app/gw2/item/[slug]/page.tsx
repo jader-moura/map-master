@@ -8,6 +8,7 @@ import { ItemCard } from "@/components/ItemCard";
 import { VendorCard } from "@/components/VendorCard";
 import AchievementRewardList from "@/components/AchievementRewardList";
 import CopyCode from "@/components/CopyCode";
+import { Icon, P } from "@/components/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { itemProductJsonLd } from "@/lib/seo";
 import {
@@ -242,11 +243,19 @@ export default async function ItemPage({ params }: Params) {
                 )}
                 {ownPrice && (
                   <>
-                    <span className="inline-flex items-center gap-1.5">
-                      TP buy <Coins value={ownPrice.buys.unit_price} />
+                    <span
+                      className="inline-flex items-center gap-1.5"
+                      title="Trading Post buy price"
+                    >
+                      <Icon path={P.tag} className="h-4 w-4 text-white/40" />
+                      Buy <Coins value={ownPrice.buys.unit_price} />
                     </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      TP sell <Coins value={ownPrice.sells.unit_price} />
+                    <span
+                      className="inline-flex items-center gap-1.5"
+                      title="Trading Post sell price"
+                    >
+                      <Icon path={P.tag} className="h-4 w-4 text-white/40" />
+                      Sell <Coins value={ownPrice.sells.unit_price} />
                     </span>
                   </>
                 )}
