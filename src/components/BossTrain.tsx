@@ -356,6 +356,23 @@ export default function BossTrain() {
                         </Link>
                       </div>
                     )}
+
+                    {isActive && (
+                      <div className="px-2.5 pb-2.5">
+                        <div className="mb-1 flex items-center justify-between text-[11px] text-green-300/90">
+                          <span>Active now</span>
+                          <span className="tabular-nums">ends in {formatCountdown(c.end - now.getTime())}</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className="h-full rounded-full bg-green-400 transition-[width] duration-1000 ease-linear"
+                            style={{
+                              width: `${Math.min(100, Math.max(0, ((now.getTime() - c.start) / (c.end - c.start)) * 100))}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}
