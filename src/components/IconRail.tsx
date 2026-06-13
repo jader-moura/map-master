@@ -1,10 +1,18 @@
 "use client";
 
+import { useEffect, useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, P } from "@/components/icons";
 import { useSeoModal } from "@/components/seo/SeoModalContext";
-import { usePersistentState } from "@/lib/usePersistentState";
+
+const NAV_KEY = "nav-expanded";
+
+// IconRail is rendered inside each page (it remounts on every navigation), so we
+// must restore the saved open/closed state BEFORE the browser paints, otherwise
+// every URL change briefly flashes the collapsed rail then snaps open. A layout
+// effect runs before paint; fall back to useEffect during SSR to avoid warnings.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const LINKS = [
   { href: "/", path: P.home, label: "Map" },
@@ -38,7 +46,28 @@ export default function IconRail({
 }) {
   const pathname = usePathname();
   const seo = useSeoModal();
-  const [expanded, setExpanded] = usePersistentState("nav-expanded", false);
+  const [expanded, setExpanded] = useState(false);
+
+  // Restore saved state before paint (no flash on navigation).
+  useIsomorphicLayoutEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(NAV_KEY);
+      if (raw != null) setExpanded(JSON.parse(raw) as boolean);
+    } catch {
+      /* ignore unavailable storage */
+    }
+  }, []);
+
+  const toggle = () =>
+    setExpanded((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem(NAV_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore unavailable storage */
+      }
+      return next;
+    });
 
   // Shared classes for an item (nav link or button) that adapts to the rail width.
   const itemCls = (active: boolean, dim = false) =>
@@ -60,7 +89,7 @@ export default function IconRail({
       {/* Expand / collapse toggle */}
       <button
         type="button"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={toggle}
         title={expanded ? "Collapse menu" : "Expand menu"}
         aria-label={expanded ? "Collapse menu" : "Expand menu"}
         aria-expanded={expanded}
