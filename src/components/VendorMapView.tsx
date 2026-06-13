@@ -9,11 +9,17 @@ const VendorMap = dynamic(() => import("@/components/VendorMap"), {
   loading: () => <div className="h-full w-full animate-pulse bg-white/5" />,
 });
 
-export default function VendorMapView({ locations }: { locations: VendorMapLocation[] }) {
+export default function VendorMapView({
+  locations,
+  areas,
+}: {
+  locations: VendorMapLocation[];
+  areas?: [[number, number], [number, number]][];
+}) {
   if (!locations.length) return null;
   return (
     <div className="h-[300px] w-full overflow-hidden rounded-xl border border-white/10">
-      <VendorMap locations={locations} />
+      <VendorMap locations={locations} areas={areas} />
     </div>
   );
 }

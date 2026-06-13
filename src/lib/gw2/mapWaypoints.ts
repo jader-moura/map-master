@@ -3,7 +3,13 @@
 // in-game chat code, plus a region -> map-names index. Source: GW2 API
 // /v2/continents/1/floors/1 (chat_link is provided directly by the API).
 
-export type MapWaypoint = { name: string; chat: string; coord: [number, number] };
+export type MapWaypoint = {
+  name: string;
+  chat: string;
+  coord: [number, number];
+  /** Map bounding rectangle [[x0,y0],[x1,y1]] in continent coordinates. */
+  rect: [[number, number], [number, number]];
+};
 
 export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
   "Amnytas": {
@@ -12,6 +18,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       24086,
       19984
+    ],
+    "rect": [
+      [
+        22614,
+        18938
+      ],
+      [
+        25558,
+        21882
+      ]
     ]
   },
   "Arborstone": {
@@ -20,6 +36,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       29845,
       101425
+    ],
+    "rect": [
+      [
+        29185,
+        100890
+      ],
+      [
+        33025,
+        103450
+      ]
     ]
   },
   "Auric Basin": {
@@ -28,6 +54,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       34318,
       33966
+    ],
+    "rect": [
+      [
+        33280,
+        32512
+      ],
+      [
+        35328,
+        35328
+      ]
     ]
   },
   "Bava Nisos": {
@@ -36,6 +72,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       36051,
       11654
+    ],
+    "rect": [
+      [
+        35720,
+        10344
+      ],
+      [
+        38280,
+        12904
+      ]
     ]
   },
   "Bitterfrost Frontier": {
@@ -44,6 +90,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       54984,
       23970
+    ],
+    "rect": [
+      [
+        53504,
+        23040
+      ],
+      [
+        56576,
+        24576
+      ]
     ]
   },
   "Bjora Marches": {
@@ -52,6 +108,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       56616,
       17815
+    ],
+    "rect": [
+      [
+        54911,
+        16972
+      ],
+      [
+        59391,
+        19148
+      ]
     ]
   },
   "Black Citadel": {
@@ -60,6 +126,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       57120,
       31106
+    ],
+    "rect": [
+      [
+        56320,
+        29952
+      ],
+      [
+        57856,
+        32000
+      ]
     ]
   },
   "Blazeridge Steppes": {
@@ -68,6 +144,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       62795,
       30752
+    ],
+    "rect": [
+      [
+        61952,
+        28544
+      ],
+      [
+        64000,
+        32640
+      ]
     ]
   },
   "Bloodstone Fen": {
@@ -76,6 +162,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       35482,
       30692
+    ],
+    "rect": [
+      [
+        34816,
+        30338
+      ],
+      [
+        36352,
+        30978
+      ]
     ]
   },
   "Bloodtide Coast": {
@@ -84,6 +180,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       49401,
       34072
+    ],
+    "rect": [
+      [
+        48000,
+        32256
+      ],
+      [
+        50432,
+        35456
+      ]
     ]
   },
   "Brisban Wildlands": {
@@ -92,6 +198,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       40166,
       31857
+    ],
+    "rect": [
+      [
+        38656,
+        30848
+      ],
+      [
+        42112,
+        33536
+      ]
     ]
   },
   "Caledon Forest": {
@@ -100,6 +216,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       42869,
       34533
+    ],
+    "rect": [
+      [
+        42112,
+        32512
+      ],
+      [
+        44032,
+        36480
+      ]
     ]
   },
   "Closing Ceremony": {
@@ -108,6 +234,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       43628,
       27230
+    ],
+    "rect": [
+      [
+        43008,
+        26240
+      ],
+      [
+        44928,
+        28032
+      ]
     ]
   },
   "Cursed Shore": {
@@ -116,6 +252,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       43854,
       43752
+    ],
+    "rect": [
+      [
+        42880,
+        41600
+      ],
+      [
+        44928,
+        45696
+      ]
     ]
   },
   "Diessa Plateau": {
@@ -124,6 +270,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       57831,
       28790
+    ],
+    "rect": [
+      [
+        56320,
+        27648
+      ],
+      [
+        59904,
+        29952
+      ]
     ]
   },
   "Divinity's Reach": {
@@ -132,6 +288,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       44036,
       27193
+    ],
+    "rect": [
+      [
+        43008,
+        26240
+      ],
+      [
+        44928,
+        28032
+      ]
     ]
   },
   "Domain of Istan": {
@@ -140,6 +306,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       57793,
       61028
+    ],
+    "rect": [
+      [
+        55318,
+        59916
+      ],
+      [
+        59158,
+        63756
+      ]
     ]
   },
   "Draconis Mons": {
@@ -148,6 +324,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       36589,
       41019
+    ],
+    "rect": [
+      [
+        34718,
+        39284
+      ],
+      [
+        38558,
+        43124
+      ]
     ]
   },
   "Dragon's End": {
@@ -156,6 +342,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       34181,
       103953
+    ],
+    "rect": [
+      [
+        33126,
+        101838
+      ],
+      [
+        35302,
+        105550
+      ]
     ]
   },
   "Dragon's Stand": {
@@ -164,6 +360,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       35436,
       37715
+    ],
+    "rect": [
+      [
+        34048,
+        36096
+      ],
+      [
+        37120,
+        38784
+      ]
     ]
   },
   "Dredgehaunt Cliffs": {
@@ -172,6 +378,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       53575,
       32721
+    ],
+    "rect": [
+      [
+        52224,
+        31360
+      ],
+      [
+        54528,
+        34560
+      ]
     ]
   },
   "Drizzlewood Coast": {
@@ -180,6 +396,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       50444,
       19441
+    ],
+    "rect": [
+      [
+        50128,
+        17809
+      ],
+      [
+        52304,
+        22289
+      ]
     ]
   },
   "Dry Top": {
@@ -188,6 +414,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       37731,
       32727
+    ],
+    "rect": [
+      [
+        36608,
+        30976
+      ],
+      [
+        38656,
+        33536
+      ]
     ]
   },
   "Ember Bay": {
@@ -196,6 +432,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       39809,
       45115
+    ],
+    "rect": [
+      [
+        37374,
+        43518
+      ],
+      [
+        41214,
+        47358
+      ]
     ]
   },
   "Eternity's Garden": {
@@ -204,6 +450,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       4867,
       61003
+    ],
+    "rect": [
+      [
+        3130,
+        59945
+      ],
+      [
+        5690,
+        63145
+      ]
     ]
   },
   "Eye of the North": {
@@ -212,6 +468,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       57865,
       21795
+    ],
+    "rect": [
+      [
+        57344,
+        21248
+      ],
+      [
+        58624,
+        22528
+      ]
     ]
   },
   "Fields of Ruin": {
@@ -220,6 +486,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       63113,
       34430
+    ],
+    "rect": [
+      [
+        61440,
+        32640
+      ],
+      [
+        64512,
+        35712
+      ]
     ]
   },
   "Fireheart Rise": {
@@ -228,6 +504,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       58276,
       25871
+    ],
+    "rect": [
+      [
+        56576,
+        24832
+      ],
+      [
+        59904,
+        27648
+      ]
     ]
   },
   "Frostgorge Sound": {
@@ -236,6 +522,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       55253,
       26550
+    ],
+    "rect": [
+      [
+        53504,
+        24576
+      ],
+      [
+        56576,
+        27648
+      ]
     ]
   },
   "Gendarran Fields": {
@@ -244,6 +540,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       48089,
       29884
+    ],
+    "rect": [
+      [
+        46208,
+        28672
+      ],
+      [
+        50432,
+        30720
+      ]
     ]
   },
   "Grothmar Valley": {
@@ -252,6 +558,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       60427,
       18848
+    ],
+    "rect": [
+      [
+        59392,
+        17504
+      ],
+      [
+        62592,
+        20064
+      ]
     ]
   },
   "Gyala Delve": {
@@ -260,6 +576,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       37424,
       102153
+    ],
+    "rect": [
+      [
+        36677,
+        100479
+      ],
+      [
+        38853,
+        104191
+      ]
     ]
   },
   "Harathi Hinterlands": {
@@ -268,6 +594,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       47863,
       27455
+    ],
+    "rect": [
+      [
+        46208,
+        25856
+      ],
+      [
+        49408,
+        28672
+      ]
     ]
   },
   "Hoelbrak": {
@@ -276,6 +612,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       53314,
       30661
+    ],
+    "rect": [
+      [
+        52224,
+        29696
+      ],
+      [
+        54528,
+        31360
+      ]
     ]
   },
   "Inner Nayos": {
@@ -284,6 +630,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       21734,
       22801
+    ],
+    "rect": [
+      [
+        19435,
+        21900
+      ],
+      [
+        23147,
+        24076
+      ]
     ]
   },
   "Iron Marches": {
@@ -292,6 +648,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       61229,
       28081
+    ],
+    "rect": [
+      [
+        59904,
+        25856
+      ],
+      [
+        61952,
+        29952
+      ]
     ]
   },
   "Isle of Reflection": {
@@ -300,6 +666,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       21852,
       104468
+    ],
+    "rect": [
+      [
+        21319,
+        103145
+      ],
+      [
+        23239,
+        105705
+      ]
     ]
   },
   "Janthir Syntri": {
@@ -308,6 +684,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       39237,
       15525
+    ],
+    "rect": [
+      [
+        38294,
+        14082
+      ],
+      [
+        41494,
+        17154
+      ]
     ]
   },
   "Kessex Hills": {
@@ -316,6 +702,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       43834,
       31419
+    ],
+    "rect": [
+      [
+        42112,
+        30464
+      ],
+      [
+        46208,
+        32512
+      ]
     ]
   },
   "Labyrinthine Cliffs": {
@@ -324,6 +720,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       55718,
       39278
+    ],
+    "rect": [
+      [
+        54958,
+        38648
+      ],
+      [
+        56494,
+        40184
+      ]
     ]
   },
   "Lake Doric": {
@@ -332,6 +738,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       45005,
       27002
+    ],
+    "rect": [
+      [
+        44928,
+        25472
+      ],
+      [
+        46208,
+        28032
+      ]
     ]
   },
   "Lion's Arch": {
@@ -340,6 +756,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       49309,
       31223
+    ],
+    "rect": [
+      [
+        48000,
+        30720
+      ],
+      [
+        50432,
+        32256
+      ]
     ]
   },
   "Lion's Arch Aerodrome": {
@@ -348,6 +774,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       49331,
       32137
+    ],
+    "rect": [
+      [
+        47964,
+        30806
+      ],
+      [
+        50396,
+        32342
+      ]
     ]
   },
   "Lornar's Pass": {
@@ -356,6 +792,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       51276,
       31884
+    ],
+    "rect": [
+      [
+        50432,
+        29696
+      ],
+      [
+        52224,
+        34560
+      ]
     ]
   },
   "Lost Precipice": {
@@ -364,6 +810,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       34235,
       30348
+    ],
+    "rect": [
+      [
+        33536,
+        29696
+      ],
+      [
+        34816,
+        30976
+      ]
     ]
   },
   "Lowland Shore": {
@@ -372,6 +828,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       41864,
       22648
+    ],
+    "rect": [
+      [
+        40119,
+        21518
+      ],
+      [
+        43959,
+        24078
+      ]
     ]
   },
   "Malchor's Leap": {
@@ -380,6 +846,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       45132,
       40523
+    ],
+    "rect": [
+      [
+        43136,
+        39552
+      ],
+      [
+        47232,
+        41600
+      ]
     ]
   },
   "Metrica Province": {
@@ -388,6 +864,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       40758,
       35413
+    ],
+    "rect": [
+      [
+        39936,
+        33536
+      ],
+      [
+        42112,
+        36864
+      ]
     ]
   },
   "Mistburned Barrens": {
@@ -396,6 +882,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       34312,
       11578
+    ],
+    "rect": [
+      [
+        34063,
+        10361
+      ],
+      [
+        37903,
+        12921
+      ]
     ]
   },
   "Mount Maelstrom": {
@@ -404,6 +900,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       52794,
       38992
+    ],
+    "rect": [
+      [
+        50560,
+        37760
+      ],
+      [
+        54400,
+        40192
+      ]
     ]
   },
   "New Kaineng City": {
@@ -412,6 +918,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       26674,
       99438
+    ],
+    "rect": [
+      [
+        25000,
+        98100
+      ],
+      [
+        28840,
+        100660
+      ]
     ]
   },
   "Plains of Ashford": {
@@ -420,6 +936,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       59896,
       30719
+    ],
+    "rect": [
+      [
+        57856,
+        29952
+      ],
+      [
+        61952,
+        32000
+      ]
     ]
   },
   "Queensdale": {
@@ -428,6 +954,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       44145,
       29194
+    ],
+    "rect": [
+      [
+        42624,
+        28032
+      ],
+      [
+        46208,
+        30464
+      ]
     ]
   },
   "Rata Sum": {
@@ -436,6 +972,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       38746,
       37236
+    ],
+    "rect": [
+      [
+        37376,
+        36094
+      ],
+      [
+        39936,
+        38654
+      ]
     ]
   },
   "Seitung Province": {
@@ -444,6 +990,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       23191,
       101452
+    ],
+    "rect": [
+      [
+        21159,
+        100457
+      ],
+      [
+        24999,
+        103145
+      ]
     ]
   },
   "Shipwreck Strand": {
@@ -452,6 +1008,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       11661,
       59029
+    ],
+    "rect": [
+      [
+        9530,
+        57385
+      ],
+      [
+        12090,
+        60585
+      ]
     ]
   },
   "Siren's Landing": {
@@ -460,6 +1026,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       49393,
       42605
+    ],
+    "rect": [
+      [
+        47002,
+        41600
+      ],
+      [
+        50330,
+        42880
+      ]
     ]
   },
   "Skywatch Archipelago": {
@@ -468,6 +1044,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       25402,
       23928
+    ],
+    "rect": [
+      [
+        23590,
+        22650
+      ],
+      [
+        27302,
+        24826
+      ]
     ]
   },
   "Snowden Drifts": {
@@ -476,6 +1062,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       52847,
       28439
+    ],
+    "rect": [
+      [
+        50432,
+        27648
+      ],
+      [
+        54528,
+        29696
+      ]
     ]
   },
   "Southsun Cove": {
@@ -484,6 +1080,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       45606,
       36767
+    ],
+    "rect": [
+      [
+        44288,
+        35328
+      ],
+      [
+        46976,
+        37120
+      ]
     ]
   },
   "Sparkfly Fen": {
@@ -492,6 +1098,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       49398,
       37058
+    ],
+    "rect": [
+      [
+        48000,
+        35456
+      ],
+      [
+        50560,
+        38784
+      ]
     ]
   },
   "Starlit Weald": {
@@ -500,6 +1116,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       7618,
       58836
+    ],
+    "rect": [
+      [
+        6330,
+        57385
+      ],
+      [
+        9530,
+        59945
+      ]
     ]
   },
   "Straits of Devastation": {
@@ -508,6 +1134,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       49073,
       40069
+    ],
+    "rect": [
+      [
+        47232,
+        38784
+      ],
+      [
+        50560,
+        41600
+      ]
     ]
   },
   "Tangled Depths": {
@@ -516,6 +1152,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       36674,
       35238
+    ],
+    "rect": [
+      [
+        35328,
+        33792
+      ],
+      [
+        38656,
+        36096
+      ]
     ]
   },
   "The Echovald Wilds": {
@@ -524,6 +1170,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       30312,
       102714
+    ],
+    "rect": [
+      [
+        29185,
+        100890
+      ],
+      [
+        33025,
+        103450
+      ]
     ]
   },
   "The Grove": {
@@ -532,6 +1188,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       43162,
       37494
+    ],
+    "rect": [
+      [
+        42496,
+        36480
+      ],
+      [
+        43904,
+        38528
+      ]
     ]
   },
   "The Silverwastes": {
@@ -540,6 +1206,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       38234,
       31108
+    ],
+    "rect": [
+      [
+        36608,
+        30592
+      ],
+      [
+        38656,
+        32128
+      ]
     ]
   },
   "The Wizard's Tower": {
@@ -548,6 +1224,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       24103,
       22231
+    ],
+    "rect": [
+      [
+        23399,
+        21882
+      ],
+      [
+        24807,
+        22650
+      ]
     ]
   },
   "Thunderhead Peaks": {
@@ -556,6 +1242,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       58150,
       36960
+    ],
+    "rect": [
+      [
+        55820,
+        34936
+      ],
+      [
+        59148,
+        38648
+      ]
     ]
   },
   "Timberline Falls": {
@@ -564,6 +1260,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       52878,
       36203
+    ],
+    "rect": [
+      [
+        51712,
+        34560
+      ],
+      [
+        54016,
+        37760
+      ]
     ]
   },
   "Verdant Brink": {
@@ -572,6 +1278,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       35166,
       31785
+    ],
+    "rect": [
+      [
+        33408,
+        30976
+      ],
+      [
+        36608,
+        32512
+      ]
     ]
   },
   "Wayfarer Foothills": {
@@ -580,6 +1296,16 @@ export const MAP_WAYPOINTS: Record<string, MapWaypoint> = {
     "coord": [
       55448,
       29751
+    ],
+    "rect": [
+      [
+        54528,
+        27648
+      ],
+      [
+        56320,
+        32256
+      ]
     ]
   }
 };

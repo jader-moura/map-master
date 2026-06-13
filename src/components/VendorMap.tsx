@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { CRS, latLngBounds, divIcon } from "leaflet";
-import { MapContainer, TileLayer, CircleMarker, Marker, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Marker, Rectangle, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { unproject, TILE_URL, TYRIA_BOUNDS, MAX_ZOOM } from "@/lib/gw2/mapTiles";
 
@@ -51,12 +51,15 @@ export default function VendorMap({
   locations,
   highlightIds,
   activeIds,
+  areas,
 }: {
   locations: VendorMapLocation[];
   /** Marker ids to emphasise (e.g. the expanded boss card). */
   highlightIds?: string[];
   /** Marker ids to colour green (e.g. a boss active right now). */
   activeIds?: string[];
+  /** Map rectangles to shade [[x0,y0],[x1,y1]] (e.g. the maps an achievement covers). */
+  areas?: [[number, number], [number, number]][];
 }) {
   const coords = locations.map((l) => l.coord);
   const center = coords.length ? unproject(coords[0]) : unproject([49404, 31170]);
@@ -74,6 +77,13 @@ export default function VendorMap({
       maxBounds={TYRIA_BOUNDS}
     >
       <TileLayer url={TILE_URL} noWrap minZoom={1} maxZoom={MAX_ZOOM} />
+      {areas?.map((r, i) => (
+        <Rectangle
+          key={`area-${i}`}
+          bounds={latLngBounds(unproject(r[0]), unproject(r[1]))}
+          pathOptions={{ color: "#f59e0b", weight: 1.5, fillColor: "#f59e0b", fillOpacity: 0.12 }}
+        />
+      ))}
       {locations.map((l, i) => {
         const isActive = l.id ? ac.has(l.id) : false;
         const isHi = l.id ? hi.has(l.id) : false;
@@ -120,7 +130,7 @@ export default function VendorMap({
           </CircleMarker>
         );
       })}
-      <FitToLocations coords={coords} />
+      <FitToLocations coords={[...coords, ...(areas?.flat() ?? [])]} />
     </MapContainer>
   );
 }

@@ -220,7 +220,7 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
           )}
 
           {mapLocs.length > 0 ? (
-            <VendorMapView locations={mapLocs} />
+            <VendorMapView locations={mapLocs} areas={eventMaps.map((m) => m.rect)} />
           ) : (
             <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-white/40">
               No precise map location for this achievement.
