@@ -14,6 +14,7 @@ import {
 } from "@/lib/gw2/bosses";
 import CopyWaypoint from "@/components/CopyWaypoint";
 import VendorMapView from "@/components/VendorMapView";
+import { resolveEventMaps } from "@/lib/gw2/achievementMaps";
 import type { RewardAchievement } from "@/lib/gw2/itemsDb";
 
 // Official in-game waypoint map icon, used as a visual badge when an achievement
@@ -43,7 +44,17 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
     : a.location;
 
   const href = `/gw2/achievement/${itemSlug(a.id, a.name)}`;
-  const mapLocs = loc?.coord ? [{ area: loc.name, zone: loc.zone, coord: loc.coord }] : [];
+
+  // Event achievements that span a region / several maps have no single
+  // waypoint, so resolve the maps named in the requirement to per-map waypoints.
+  const isEventAch = !boss && /\bevents?\b/i.test(`${a.name} ${a.requirement ?? ""}`);
+  const eventMaps =
+    isEventAch && !loc?.chat ? resolveEventMaps(`${a.name} ${a.requirement ?? ""}`) : [];
+
+  // Show the precise location if we have one, otherwise plot the event maps.
+  const mapLocs = loc?.coord
+    ? [{ area: loc.name, zone: loc.zone, coord: loc.coord }]
+    : eventMaps.map((m) => ({ area: m.map, zone: null, coord: m.coord }));
 
   // Boss favourites share the same store as the world boss timer, so starring a
   // boss here makes it show up (and alert) there too.
@@ -57,7 +68,6 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
   // Event-completion achievements: how many events are needed lives in the
   // achievement's tiers (the API blanks the count out of the requirement text),
   // so fetch it lazily from the GW2 API the first time the card is expanded.
-  const isEventAch = !boss && /\bevents?\b/i.test(`${a.name} ${a.requirement ?? ""}`);
   const [eventCount, setEventCount] = useState<number | null>(null);
   useEffect(() => {
     if (!open || !isEventAch || eventCount !== null) return;
@@ -215,6 +225,27 @@ export default function AchievementRewardCard({ achievement: a }: { achievement:
             <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-white/40">
               No precise map location for this achievement.
             </p>
+          )}
+
+          {eventMaps.length > 0 && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs uppercase tracking-wide text-white/35">
+                Waypoints to event maps
+              </p>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {eventMaps.map((m) => (
+                  <div
+                    key={m.map}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5"
+                  >
+                    <span className="min-w-0 truncate text-xs text-white/70" title={m.name}>
+                      {m.map}
+                    </span>
+                    <CopyWaypoint code={m.chat} compact />
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
