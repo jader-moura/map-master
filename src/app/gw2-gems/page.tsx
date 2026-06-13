@@ -3,6 +3,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import PageShell from "@/components/PageShell";
 import { Coins } from "@/components/Coins";
+import { GemIcon } from "@/components/GemIcon";
 import GemCalculator from "@/components/GemCalculator";
 import { getGoldToGems, getGemsToGold, type GemExchange } from "@/lib/gw2/api";
 
@@ -98,20 +99,20 @@ export default async function GemsPage() {
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
                 <p className="text-sm font-medium uppercase tracking-wide text-white/40">Buy gems</p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  100 gold → {gemsPer100Gold.toLocaleString()} gems
+                <p className="mt-2 flex items-center gap-1.5 text-lg font-semibold text-white">
+                  100 gold → {gemsPer100Gold.toLocaleString()} <GemIcon className="h-4 w-4" /> gems
                 </p>
-                <p className="mt-1 text-sm text-white/50">
-                  About <Coins value={Math.round(buyCoinsPerGem)} /> per gem.
+                <p className="mt-1 flex items-center gap-1 text-sm text-white/50">
+                  About <Coins value={Math.round(buyCoinsPerGem)} /> per <GemIcon className="h-3.5 w-3.5" /> gem.
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
                 <p className="text-sm font-medium uppercase tracking-wide text-white/40">Sell gems</p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  100 gems → <Coins value={goldPer100Gems} />
+                <p className="mt-2 flex items-center gap-1.5 text-lg font-semibold text-white">
+                  100 <GemIcon className="h-4 w-4" /> gems → <Coins value={goldPer100Gems} />
                 </p>
-                <p className="mt-1 text-sm text-white/50">
-                  About <Coins value={Math.round(sellCoinsPerGem)} /> per gem.
+                <p className="mt-1 flex items-center gap-1 text-sm text-white/50">
+                  About <Coins value={Math.round(sellCoinsPerGem)} /> per <GemIcon className="h-3.5 w-3.5" /> gem.
                 </p>
               </div>
             </div>
