@@ -292,6 +292,20 @@ export function getMainWaypoint(event: MetaEvent): string | undefined {
   return undefined;
 }
 
+/**
+ * Best waypoint chat code for an event row: the main segment's waypoint when we
+ * have one mapped, otherwise the first segment that carries a chat link. Covers
+ * core world bosses and other events that aren't in MAIN_SEGMENTS.
+ */
+export function getEventWaypoint(event: MetaEvent): string | undefined {
+  const main = getMainWaypoint(event);
+  if (main) return main;
+  for (const seg of Object.values(event.segments)) {
+    if (seg.chatlink) return seg.chatlink;
+  }
+  return undefined;
+}
+
 /** Upcoming main-event start times for a meta event (for the info panel). */
 export function getUpcomingMainEvents(
   event: MetaEvent,

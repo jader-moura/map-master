@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import IconRail from "@/components/IconRail";
+import CopyWaypoint from "@/components/CopyWaypoint";
 import { Icon, P } from "@/components/icons";
-import { getWindowSegments, type MetaEvent } from "@/lib/gw2/events";
+import { getEventWaypoint, getWindowSegments, type MetaEvent } from "@/lib/gw2/events";
 
 // Order of category groups, top to bottom (matches the GW2 wiki).
 const CATEGORY_ORDER = [
@@ -130,10 +131,13 @@ export default function TimelineView() {
                   <div className="bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/50">
                     {cat}
                   </div>
-                  {groups[cat].map(({ ev, segs }) => (
+                  {groups[cat].map(({ ev, segs }) => {
+                    const wp = getEventWaypoint(ev);
+                    return (
                     <div key={ev.id} className="flex h-7 items-stretch border-b border-white/5">
-                      <div className="flex w-40 shrink-0 items-center truncate px-3 text-xs text-white/80 sm:w-48">
-                        <span className="truncate">{ev.name}</span>
+                      <div className="flex w-40 shrink-0 items-center gap-1.5 px-3 text-xs text-white/80 sm:w-48">
+                        <span className="min-w-0 truncate">{ev.name}</span>
+                        {wp && <CopyWaypoint code={wp} mini />}
                       </div>
                       <div className="relative flex-1 bg-white/[0.015]">
                         {segs.map((s, i) => {
@@ -159,7 +163,8 @@ export default function TimelineView() {
                         />
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ))}
             </div>

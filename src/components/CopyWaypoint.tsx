@@ -10,11 +10,14 @@ export default function CopyWaypoint({
   code,
   label,
   compact = false,
+  mini = false,
 }: {
   code: string;
   label?: string;
   /** Icon-only square button, for tight spots like list cards. */
   compact?: boolean;
+  /** Extra-small icon-only button, for very tight rows like the timeline. */
+  mini?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -31,6 +34,20 @@ export default function CopyWaypoint({
         setTimeout(() => setCopied(false), 1500);
       })
       .catch(() => {});
+  }
+
+  if (mini) {
+    return (
+      <button
+        type="button"
+        onClick={copy}
+        title={`Copy waypoint code ${code}`}
+        aria-label="Copy waypoint location"
+        className="grid h-5 w-5 shrink-0 place-items-center rounded border border-orange-400/30 bg-orange-400/10 text-orange-300/80 transition hover:bg-orange-400/25 hover:text-orange-300"
+      >
+        <Icon path={copied ? P.check : P.pin} className="h-3 w-3" />
+      </button>
+    );
   }
 
   if (compact) {
