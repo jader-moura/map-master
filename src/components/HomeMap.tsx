@@ -160,7 +160,9 @@ function PoiMarkers({
   for (const kind of POI_KINDS) {
     if (!visible[kind]) continue;
     if (!q && zoom < POI_META[kind].minZoom) continue;
-    const label = POI_META[kind].label.replace(/s$/, "");
+    // Singularise plural layer labels for the tooltip ("Waypoints" → "Waypoint"),
+    // but leave mastery-track names ("Heart of Thorns") intact.
+    const label = kind.startsWith("mastery") ? POI_META[kind].label : POI_META[kind].label.replace(/s$/, "");
     const list = prepared[kind];
     // One declutter grid per kind so layers thin independently of each other.
     const occupied = declutter ? new Set<string>() : null;

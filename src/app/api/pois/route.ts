@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 import {
   TRAVEL_PORTALS,
-  MASTERY_ICONS,
-  MASTERY_ICON_FALLBACK,
+  POI_KINDS,
+  MASTERY_REGION_KIND,
+  MASTERY_KIND_FALLBACK,
   type PoiData,
   type PoiKind,
+  type PoiMarker,
 } from "@/lib/gw2/pois";
 
 // Continent 1 spreads its maps across many floors. Floor 1 is the base floor and
@@ -33,7 +35,8 @@ type RawFloor = { regions: Record<string, { maps: Record<string, RawMap> }> };
 // on a cache miss (weekly).
 const getPois = unstable_cache(
   async (): Promise<PoiData> => {
-    const data: PoiData = { waypoint: [], travel: TRAVEL_PORTALS, portal: [], vista: [], heart: [], hero: [], mastery: [], landmark: [] };
+    const data = Object.fromEntries(POI_KINDS.map((k) => [k, [] as PoiMarker[]])) as PoiData;
+    data.travel = [...TRAVEL_PORTALS];
 
     // Dedup markers by rounded coordinate — a map can appear (populated) on more
     // than one floor, and distinct POIs never share the same coordinate.
@@ -74,20 +77,17 @@ const getPois = unstable_cache(
             if (hero.coord) add(data.hero, "Hero Challenge", hero.coord);
           }
           for (const mp of map.mastery_points ?? []) {
-            if (mp.coord)
-              add(
-                data.mastery,
-                "Mastery Insight",
-                mp.coord,
-                (mp.region && MASTERY_ICONS[mp.region]) || MASTERY_ICON_FALLBACK,
-              );
+            if (mp.coord) {
+              const kind = (mp.region && MASTERY_REGION_KIND[mp.region]) || MASTERY_KIND_FALLBACK;
+              add(data[kind], "Mastery Insight", mp.coord);
+            }
           }
         }
       }
     }
     return data;
   },
-  ["gw2-pois-c1-v4"],
+  ["gw2-pois-c1-v5"],
   { revalidate: 60 * 60 * 24 * 7 }, // refresh weekly
 );
 

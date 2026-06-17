@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import IconRail from "@/components/IconRail";
@@ -62,6 +62,13 @@ export default function HomeMapView() {
 
   const setAll = (v: boolean) =>
     setVisible(Object.fromEntries(POI_KINDS.map((k) => [k, v])) as Record<PoiKind, boolean>);
+
+  // The first mastery-track layer; we slot a group sub-header before it.
+  const firstMasteryKind = POI_KINDS.find((k) => k.startsWith("mastery"));
+  const masteryCount = useMemo(
+    () => POI_KINDS.filter((k) => k.startsWith("mastery")).reduce((n, k) => n + counts[k], 0),
+    [counts],
+  );
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0a0a0f] text-white">
@@ -138,8 +145,16 @@ export default function HomeMapView() {
               const meta = POI_META[kind];
               const on = visible[kind];
               return (
+                <Fragment key={kind}>
+                  {kind === firstMasteryKind && (
+                    <div className="flex items-center gap-2 px-1 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-white/50">
+                      Mastery Insights
+                      <span className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-white/60">
+                        {isLoading ? "…" : masteryCount.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
                 <button
-                  key={kind}
                   onClick={() =>
                     setVisible((v) => {
                       const merged = { ...DEFAULT_VISIBLE, ...v };
@@ -164,6 +179,7 @@ export default function HomeMapView() {
                   </span>
                   <Icon path={on ? P.eye : P.eyeOff} className="h-4 w-4 text-white/40" />
                 </button>
+                </Fragment>
               );
             })}
             {isError && (
