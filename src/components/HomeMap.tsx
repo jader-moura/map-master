@@ -86,6 +86,12 @@ const DECLUTTER_PX = 52;
 // Only thin at very low zoom; once zoomed in past this the viewport is small
 // enough that culling alone keeps it light, so we show every marker.
 const DECLUTTER_MAX_ZOOM = 3;
+// Each layer has a "natural" zoom (POI_META.minZoom) at which it reads well.
+// Below that we don't hide it (that left big gaps when zoomed out) — instead we
+// thin it harder by enlarging its declutter cell, so dense/secondary layers
+// stay sparse far out but never vanish. Cell grows by this factor per zoom level
+// below the layer's natural zoom.
+const SPARSE_FACTOR = 2.2;
 
 // Per-marker icon cache (used by mastery points, whose icon varies by region).
 // Keyed by URL and reused across renders so we build each Leaflet icon once.
@@ -159,12 +165,15 @@ function PoiMarkers({
   let searchCount = 0;
   for (const kind of POI_KINDS) {
     if (!visible[kind]) continue;
-    if (!q && zoom < POI_META[kind].minZoom) continue;
     // Singularise plural layer labels for the tooltip ("Waypoints" → "Waypoint"),
     // but leave mastery-track names ("Heart of Thorns") intact.
     const label = kind.startsWith("mastery") ? POI_META[kind].label : POI_META[kind].label.replace(/s$/, "");
     const list = prepared[kind];
     // One declutter grid per kind so layers thin independently of each other.
+    // The cell grows for layers below their natural zoom, so they thin out (but
+    // never disappear) instead of being hidden outright when zoomed far out.
+    const deficit = Math.max(0, POI_META[kind].minZoom - zoom);
+    const cellPx = DECLUTTER_PX * Math.pow(SPARSE_FACTOR, deficit);
     const occupied = declutter ? new Set<string>() : null;
     for (let i = 0; i < list.length; i++) {
       const { m, pos } = list[i];
@@ -177,7 +186,7 @@ function PoiMarkers({
         if (occupied) {
           // Project to pixel space at the current zoom, keep one marker per cell.
           const p = map.project(pos, zoom);
-          const cell = `${Math.floor(p.x / DECLUTTER_PX)}:${Math.floor(p.y / DECLUTTER_PX)}`;
+          const cell = `${Math.floor(p.x / cellPx)}:${Math.floor(p.y / cellPx)}`;
           if (occupied.has(cell)) continue;
           occupied.add(cell);
         }
