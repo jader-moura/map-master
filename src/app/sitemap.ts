@@ -3,6 +3,7 @@ import { getSql } from "@/lib/db";
 import { itemSlug } from "@/lib/gw2/items";
 import { BOSSES } from "@/lib/gw2/bosses";
 import { EVENT_LOCATIONS } from "@/lib/gw2/events";
+import { FISHING_REGION_LIST } from "@/lib/gw2/fishing";
 
 const SITE_URL = "https://buildop.app";
 // Google caps a single sitemap file at 50k URLs; keep chunks well under that.
@@ -44,6 +45,7 @@ export default async function sitemap({
       { url: `${SITE_URL}/gw2-event-timer`, lastModified, changeFrequency: "daily", priority: 0.8 },
       { url: `${SITE_URL}/gw2-reset-timer`, lastModified, changeFrequency: "daily", priority: 0.8 },
       { url: `${SITE_URL}/gw2-gathering-map`, lastModified, changeFrequency: "weekly", priority: 0.7 },
+      { url: `${SITE_URL}/gw2-fishing`, lastModified, changeFrequency: "weekly", priority: 0.7 },
       { url: `${SITE_URL}/gw2-trading-post`, lastModified, changeFrequency: "hourly", priority: 0.7 },
       { url: `${SITE_URL}/gw2-gems`, lastModified, changeFrequency: "hourly", priority: 0.6 },
       { url: `${SITE_URL}/gw2/items`, lastModified, changeFrequency: "weekly", priority: 0.7 },
@@ -66,6 +68,13 @@ export default async function sitemap({
       lastModified,
       changeFrequency: "daily",
       priority: 0.7,
+    }));
+
+    const fishingUrls: MetadataRoute.Sitemap = FISHING_REGION_LIST.map((r) => ({
+      url: `${SITE_URL}/gw2/fishing/${r.slug}`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.6,
     }));
 
     const vendors = await sql<{ slug: string }[]>`select slug from vendors order by slug`;
@@ -104,7 +113,7 @@ export default async function sitemap({
       priority: 0.4,
     }));
 
-    return [...staticPages, ...bossUrls, ...metaUrls, ...vendorUrls, ...achUrls, ...browseUrls];
+    return [...staticPages, ...bossUrls, ...metaUrls, ...fishingUrls, ...vendorUrls, ...achUrls, ...browseUrls];
   }
 
   // Item chunk (id 1..N).

@@ -11,10 +11,25 @@ export type VendorMapLocation = {
   id?: string;
   /** Optional short label drawn inside the marker (e.g. a route step number). */
   label?: string;
+  /** Optional marker style: "fish" draws a fish symbol (e.g. a fishing spot). */
+  kind?: "fish";
   area: string;
   zone: string | null;
   coord: [number, number];
 };
+
+// A fish symbol as a Leaflet div-icon, for fishing spots on the water.
+const FISH_PATH = "M3 12c3-5 9-5 12 0-3 5-9 5-12 0M15 12l6-4v8l-6-4M7 11h.01";
+function fishIcon(isHi: boolean) {
+  const size = isHi ? 34 : 26;
+  const inner = isHi ? 22 : 16;
+  return divIcon({
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:#0ea5e9;border:${isHi ? 3 : 2}px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.55)"><svg viewBox="0 0 24 24" width="${inner}" height="${inner}" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${FISH_PATH}"/></svg></div>`,
+  });
+}
 
 // A round, numbered pin as a Leaflet div-icon. Colour follows the same scheme as
 // the plain markers: green when active, amber otherwise, orange ring + larger
@@ -32,18 +47,33 @@ function numberedIcon(label: string, fill: string, isHi: boolean) {
 
 // Centre on the single location, or fit all of them in view. Keyed on the
 // coordinates themselves (not array identity) so re-rendering with the same
-// places, e.g. to restyle a highlighted marker, never re-zooms the map.
-function FitToLocations({ coords }: { coords: [number, number][] }) {
+// places, e.g. to restyle a highlighted marker, never re-zooms the map. When
+// `focus` bounds are supplied the map flies to them instead; clearing focus
+// flies back to the full fit.
+function FitToLocations({
+  coords,
+  focus,
+}: {
+  coords: [number, number][];
+  focus?: [[number, number], [number, number]] | null;
+}) {
   const map = useMap();
   const key = coords.map((c) => c.join(",")).join("|");
+  const focusKey = focus ? focus.flat().join(",") : "";
   useEffect(() => {
-    if (coords.length === 1) {
+    if (focus) {
+      map.flyToBounds(latLngBounds(unproject(focus[0]), unproject(focus[1])), {
+        padding: [24, 24],
+        maxZoom: 6,
+        duration: 0.6,
+      });
+    } else if (coords.length === 1) {
       map.setView(unproject(coords[0]), 5);
     } else if (coords.length > 1) {
       map.fitBounds(latLngBounds(coords.map(unproject)), { padding: [28, 28], maxZoom: 5 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, map]);
+  }, [key, focusKey, map]);
   return null;
 }
 
@@ -52,6 +82,7 @@ export default function VendorMap({
   highlightIds,
   activeIds,
   areas,
+  focusBounds,
 }: {
   locations: VendorMapLocation[];
   /** Marker ids to emphasise (e.g. the expanded boss card). */
@@ -60,6 +91,8 @@ export default function VendorMap({
   activeIds?: string[];
   /** Map rectangles to shade [[x0,y0],[x1,y1]] (e.g. the maps an achievement covers). */
   areas?: [[number, number], [number, number]][];
+  /** When set, fly to and zoom into these bounds; clearing returns to full fit. */
+  focusBounds?: [[number, number], [number, number]] | null;
 }) {
   const coords = locations.map((l) => l.coord);
   const center = coords.length ? unproject(coords[0]) : unproject([49404, 31170]);
@@ -101,6 +134,19 @@ export default function VendorMap({
           </Tooltip>
         );
 
+        if (l.kind === "fish") {
+          return (
+            <Marker
+              key={key}
+              position={unproject(l.coord)}
+              icon={fishIcon(isHi)}
+              zIndexOffset={isHi ? 1000 : 500}
+            >
+              {tip}
+            </Marker>
+          );
+        }
+
         if (l.label) {
           return (
             <Marker
@@ -130,7 +176,7 @@ export default function VendorMap({
           </CircleMarker>
         );
       })}
-      <FitToLocations coords={[...coords, ...(areas?.flat() ?? [])]} />
+      <FitToLocations coords={[...coords, ...(areas?.flat() ?? [])]} focus={focusBounds} />
     </MapContainer>
   );
 }

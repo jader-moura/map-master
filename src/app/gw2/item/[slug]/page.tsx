@@ -11,6 +11,7 @@ import CopyCode from "@/components/CopyCode";
 import { Icon, P } from "@/components/icons";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { itemProductJsonLd } from "@/lib/seo";
+import { fishingForItem, timeChipClass } from "@/lib/gw2/fishingDisplay";
 import {
   getItem,
   getItemsFull,
@@ -157,6 +158,9 @@ export default async function ItemPage({ params }: Params) {
     .map((n) => dbByName.get(n))
     .filter((x): x is DbItem => Boolean(x));
 
+  // If this item is a catchable fish, link to its fishing guide region(s).
+  const fishCatches = fishingForItem(item.id);
+
   const color = rarityColor(item.rarity);
   const binding = bindingLabel(item.flags);
   const description = cleanDescription(item.description);
@@ -301,6 +305,38 @@ export default async function ItemPage({ params }: Params) {
             </Section>
           )}
 
+          {/* Fishing: if this item is a catchable fish, link to its guide */}
+          {fishCatches.length > 0 && (
+            <Section
+              title="How to catch"
+              hint={fishCatches.length > 1 ? `${fishCatches.length} regions` : "Fishing guide"}
+            >
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {fishCatches.map(({ region, fish }) => (
+                  <Link
+                    key={region.slug}
+                    href={`/gw2/fishing/${region.slug}`}
+                    className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-sky-400/40 hover:bg-white/[0.06]"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <Icon path={P.fish} className="h-4 w-4 text-sky-300" />
+                      {region.name} waters
+                    </span>
+                    <span className="flex flex-wrap items-center gap-1.5 text-xs text-white/55">
+                      <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5">{fish.hole}</span>
+                      {fish.bait !== "Any" && (
+                        <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5">Bait: {fish.bait}</span>
+                      )}
+                      <span className={`rounded border px-1.5 py-0.5 font-medium ${timeChipClass(fish.time)}`}>
+                        {fish.time}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </Section>
+          )}
+
           {/* Crafting: recipes that produce it */}
           {craftRecipes.length > 0 && (
             <Section title="How to craft" hint="Recipes that produce this item">
@@ -388,6 +424,7 @@ export default async function ItemPage({ params }: Params) {
             salvageItems.length === 0 &&
             collections.length === 0 &&
             rewardAchievements.length === 0 &&
+            fishCatches.length === 0 &&
             !hasAcquisition && (
               <p className="mt-10 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-6 text-center text-sm text-white/45">
                 No crafting, acquisition, achievement or collection data is available for this item yet.
