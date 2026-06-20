@@ -47,3 +47,41 @@ export function rarityBreakdown(fish: Fish[]): { rarity: string; count: number }
     .sort((a, b) => RARITY_ORDER.indexOf(a[0]) - RARITY_ORDER.indexOf(b[0]))
     .map(([rarity, count]) => ({ rarity, count }));
 }
+
+export type Breakdown = { label: string; count: number };
+
+// Which broad time window a fish is gated to. A fish whose time starts with
+// "Any" / "None" bites at any time (a trailing "Night (Higher Chance)" is just a
+// bonus), so it counts as "Any time".
+function timeBucket(time: string): "Any time" | "Daytime" | "Nighttime" | "Dusk/Dawn" {
+  const t = time.toLowerCase();
+  if (!(t.startsWith("any") || t.startsWith("none"))) {
+    if (t.includes("dusk") || t.includes("dawn")) return "Dusk/Dawn";
+    if (t.includes("night")) return "Nighttime";
+    if (t.includes("day")) return "Daytime";
+  }
+  return "Any time";
+}
+
+/** Fish counts per time-of-day window, in a fixed display order. */
+export function timeBreakdown(fish: Fish[]): Breakdown[] {
+  const order = ["Any time", "Daytime", "Nighttime", "Dusk/Dawn"] as const;
+  const counts = new Map<string, number>();
+  for (const f of fish) {
+    const b = timeBucket(f.time);
+    counts.set(b, (counts.get(b) ?? 0) + 1);
+  }
+  return order.map((label) => ({ label, count: counts.get(label) ?? 0 })).filter((b) => b.count > 0);
+}
+
+/** Specific favored baits (excluding "Any") with the count of fish that want them. */
+export function baitBreakdown(fish: Fish[]): Breakdown[] {
+  const counts = new Map<string, number>();
+  for (const f of fish) {
+    if (!f.bait || f.bait === "Any") continue;
+    counts.set(f.bait, (counts.get(f.bait) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([label, count]) => ({ label, count }));
+}
