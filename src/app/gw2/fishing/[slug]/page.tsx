@@ -8,6 +8,7 @@ import FishingTable from "@/components/FishingTable";
 import FishingRegionExplorer from "@/components/FishingRegionExplorer";
 import { FISHING_REGIONS, FISHING_REGION_LIST } from "@/lib/gw2/fishing";
 import { FISHING_REGION_MAPS } from "@/lib/gw2/fishingMaps";
+import { FISHING_REGION_HOLES } from "@/lib/gw2/fishingHoles";
 import { rarityBreakdown } from "@/lib/gw2/fishingDisplay";
 import { rarityColor } from "@/lib/gw2/items";
 
@@ -42,6 +43,7 @@ export default async function FishingRegionPage({ params }: Params) {
   const breakdown = rarityBreakdown(region.fish);
   const others = FISHING_REGION_LIST.filter((r) => r.slug !== slug);
   const regionMaps = FISHING_REGION_MAPS[slug] ?? [];
+  const regionHoles = FISHING_REGION_HOLES[slug] ?? [];
   const hasMap = regionMaps.length > 0;
 
   return (
@@ -118,7 +120,12 @@ export default async function FishingRegionPage({ params }: Params) {
 
         <section className="mt-8">
           {hasMap ? (
-            <FishingRegionExplorer regionName={region.name} fish={region.fish} maps={regionMaps} />
+            <FishingRegionExplorer
+              regionName={region.name}
+              fish={region.fish}
+              maps={regionMaps}
+              holes={regionHoles}
+            />
           ) : (
             <FishingTable fish={region.fish} />
           )}
@@ -143,6 +150,29 @@ export default async function FishingRegionPage({ params }: Params) {
 
         <p className="mt-10 border-t border-white/10 pt-5 text-xs text-white/35">
           Fishing data and icons from the official Guild Wars 2 API. Caught fish are account-bound.
+          {regionHoles.length > 0 && (
+            <>
+              {" "}Fishing hole locations from the{" "}
+              <a
+                href="https://github.com/Metallis/Only-Fish-Marker-Pack"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline transition hover:text-white/60"
+              >
+                Only Fish marker pack
+              </a>{" "}
+              by Metallis &amp; contributors, licensed{" "}
+              <a
+                href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline transition hover:text-white/60"
+              >
+                CC BY-NC-SA 4.0
+              </a>
+              .
+            </>
+          )}
         </p>
       </article>
 

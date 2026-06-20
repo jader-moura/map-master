@@ -13,6 +13,8 @@ export type VendorMapLocation = {
   label?: string;
   /** Optional marker style: "fish" draws a fish symbol (e.g. a fishing spot). */
   kind?: "fish";
+  /** Fishing-hole water category, carried so a click can resolve its fish. */
+  holeType?: string;
   area: string;
   zone: string | null;
   coord: [number, number];
@@ -83,6 +85,7 @@ export default function VendorMap({
   activeIds,
   areas,
   focusBounds,
+  onSelect,
 }: {
   locations: VendorMapLocation[];
   /** Marker ids to emphasise (e.g. the expanded boss card). */
@@ -93,6 +96,8 @@ export default function VendorMap({
   areas?: [[number, number], [number, number]][];
   /** When set, fly to and zoom into these bounds; clearing returns to full fit. */
   focusBounds?: [[number, number], [number, number]] | null;
+  /** Called when a marker is clicked, with its location. */
+  onSelect?: (loc: VendorMapLocation) => void;
 }) {
   const coords = locations.map((l) => l.coord);
   const center = coords.length ? unproject(coords[0]) : unproject([49404, 31170]);
@@ -134,6 +139,8 @@ export default function VendorMap({
           </Tooltip>
         );
 
+        const handlers = onSelect ? { click: () => onSelect(l) } : undefined;
+
         if (l.kind === "fish") {
           return (
             <Marker
@@ -141,6 +148,7 @@ export default function VendorMap({
               position={unproject(l.coord)}
               icon={fishIcon(isHi)}
               zIndexOffset={isHi ? 1000 : 500}
+              eventHandlers={handlers}
             >
               {tip}
             </Marker>
@@ -154,6 +162,7 @@ export default function VendorMap({
               position={unproject(l.coord)}
               icon={numberedIcon(l.label, fill, isHi)}
               zIndexOffset={isHi ? 1000 : 0}
+              eventHandlers={handlers}
             >
               {tip}
             </Marker>
@@ -171,6 +180,7 @@ export default function VendorMap({
               fillColor: fill,
               fillOpacity: isHi ? 1 : 0.9,
             }}
+            eventHandlers={handlers}
           >
             {tip}
           </CircleMarker>
