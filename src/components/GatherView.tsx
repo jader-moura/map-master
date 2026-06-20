@@ -6,7 +6,20 @@ import { useQuery } from "@tanstack/react-query";
 import IconRail from "@/components/IconRail";
 import { Icon, P } from "@/components/icons";
 import { MATERIAL_CATEGORIES, type MatItem } from "@/lib/gw2/materials";
+import { GATHERING_NODES } from "@/lib/gw2/gatheringNodes";
 import type { GatherZone } from "@/app/api/maps/route";
+
+// Keep the rendered node count bounded (a plant selection matches every plant
+// spot across the covered maps).
+const MAX_NODES = 500;
+
+// The TGMP node kind leaf for an ore/wood material ("Mithril Ore" -> "mithril",
+// "Elder Wood Log" -> "elder"). Plants are matched by category, not kind.
+function nodeKind(item: MatItem, cat: "ore" | "wood" | "plant"): string | null {
+  if (cat === "ore") return item.name.toLowerCase().replace(" ore", "").trim();
+  if (cat === "wood") return item.name.toLowerCase().replace(" wood log", "").replace(" log", "").trim();
+  return null;
+}
 
 const GatherMap = dynamic(() => import("@/components/GatherMap"), {
   ssr: false,
@@ -66,9 +79,22 @@ export default function GatherView() {
     ? zones.filter((z) => overlaps(z.levels, selectedLevels)).length
     : 0;
   const selectedName = selectedId != null ? metaById.get(selectedId)?.name : undefined;
-  const isPlant =
-    selectedItem != null &&
-    MATERIAL_CATEGORIES.find((c) => c.items.includes(selectedItem))?.key === "plant";
+  const selectedCat = useMemo(
+    () => (selectedItem ? MATERIAL_CATEGORIES.find((c) => c.items.includes(selectedItem))?.key ?? null : null),
+    [selectedItem],
+  );
+  const isPlant = selectedCat === "plant";
+
+  // Exact node spots for the selection (covered maps only); plants match by
+  // category since the in-game harvest plant rarely matches the item one-to-one.
+  const selectedNodes = useMemo(() => {
+    if (!selectedItem || !selectedCat) return [];
+    const matched =
+      selectedCat === "plant"
+        ? GATHERING_NODES.filter((n) => n.cat === "plant")
+        : GATHERING_NODES.filter((n) => n.cat === selectedCat && n.kind === nodeKind(selectedItem, selectedCat));
+    return matched.slice(0, MAX_NODES);
+  }, [selectedItem, selectedCat]);
 
   const toggle = (id: number) => setSelectedId((p) => (p === id ? null : id));
 
@@ -88,6 +114,7 @@ export default function GatherView() {
           <div className="ml-auto flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5">
             <span className="text-xs font-semibold text-emerald-300">
               {selectedName} · Lvl {selectedLevels?.[0]}–{selectedLevels?.[1]} · {matchCount} zones
+              {selectedNodes.length > 0 && ` · ${selectedNodes.length} node spots`}
             </span>
           </div>
         )}
@@ -179,11 +206,21 @@ export default function GatherView() {
               Loading Tyria map data…
             </div>
           ) : (
-            <GatherMap zones={zones} selected={selectedLevels} />
+            <GatherMap
+              zones={zones}
+              selected={selectedLevels}
+              nodes={selectedNodes}
+              nodeIcon={selectedId != null ? metaById.get(selectedId)?.icon : undefined}
+            />
           )}
           {!selectedId && (
             <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg border border-white/10 bg-[#0d0d14]/90 px-3 py-1.5 text-xs text-white/60 shadow-lg backdrop-blur">
               Select a material to highlight its zones
+            </div>
+          )}
+          {selectedId != null && selectedNodes.length > 0 && (
+            <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg border border-amber-400/25 bg-[#0d0d14]/90 px-3 py-1.5 text-xs text-amber-200/80 shadow-lg backdrop-blur">
+              {selectedNodes.length} exact node spots pinned · zoom in to use them
             </div>
           )}
         </main>
