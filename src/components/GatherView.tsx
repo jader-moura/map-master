@@ -21,6 +21,11 @@ function nodeKind(item: MatItem, cat: "ore" | "wood" | "plant"): string | null {
   return null;
 }
 
+// category ("ore" | "wood" | "plant") -> icon, for the mixed nodes of a picked map.
+const CATEGORY_ICONS: Record<string, string> = Object.fromEntries(
+  MATERIAL_CATEGORIES.map((c) => [c.key, c.icon]),
+);
+
 const GatherMap = dynamic(() => import("@/components/GatherMap"), {
   ssr: false,
   loading: () => (
@@ -58,6 +63,7 @@ export default function GatherView() {
   });
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const metaById = useMemo(
@@ -96,7 +102,29 @@ export default function GatherView() {
     return matched.slice(0, MAX_NODES);
   }, [selectedItem, selectedCat]);
 
-  const toggle = (id: number) => setSelectedId((p) => (p === id ? null : id));
+  // All gathering nodes in a clicked map (every category).
+  const zoneNodes = useMemo(
+    () => (selectedZone ? GATHERING_NODES.filter((n) => n.map === selectedZone).slice(0, MAX_NODES) : []),
+    [selectedZone],
+  );
+
+  // Material mode pins that material's spots; map mode pins everything in the map.
+  const displayNodes = selectedId != null ? selectedNodes : zoneNodes;
+  const materialIcon = selectedId != null ? metaById.get(selectedId)?.icon : undefined;
+
+  // Material and map selection are alternate modes; picking one clears the other.
+  const toggle = (id: number) => {
+    setSelectedZone(null);
+    setSelectedId((p) => (p === id ? null : id));
+  };
+  const pickZone = (name: string) => {
+    setSelectedId(null);
+    setSelectedZone((p) => (p === name ? null : name));
+  };
+  const clearAll = () => {
+    setSelectedId(null);
+    setSelectedZone(null);
+  };
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0a0a0f] text-white">
@@ -110,11 +138,12 @@ export default function GatherView() {
             Gathering Map
           </span>
         </div>
-        {selectedName && (
+        {(selectedName || selectedZone) && (
           <div className="ml-auto flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5">
             <span className="text-xs font-semibold text-emerald-300">
-              {selectedName} · Lvl {selectedLevels?.[0]}–{selectedLevels?.[1]} · {matchCount} zones
-              {selectedNodes.length > 0 && ` · ${selectedNodes.length} node spots`}
+              {selectedName
+                ? `${selectedName} · Lvl ${selectedLevels?.[0]}–${selectedLevels?.[1]} · ${matchCount} zones${selectedNodes.length > 0 ? ` · ${selectedNodes.length} node spots` : ""}`
+                : `${selectedZone} · ${zoneNodes.length} node spots`}
             </span>
           </div>
         )}
@@ -136,12 +165,12 @@ export default function GatherView() {
             <div>
               <h1 className="text-sm font-bold text-white">GW2 Gathering Map</h1>
               <p className="text-[11px] text-white/45">
-                Pick a material, the maps where you gather it light up on Tyria.
+                Pick a material to map its spots, or click a map to see every node in it.
               </p>
             </div>
-            {selectedId != null && (
+            {(selectedId != null || selectedZone) && (
               <button
-                onClick={() => setSelectedId(null)}
+                onClick={clearAll}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 py-1.5 text-xs font-medium text-white/80 transition hover:bg-white/10"
               >
                 <Icon path={P.close} className="h-3.5 w-3.5" /> Clear selection
@@ -209,18 +238,27 @@ export default function GatherView() {
             <GatherMap
               zones={zones}
               selected={selectedLevels}
-              nodes={selectedNodes}
-              nodeIcon={selectedId != null ? metaById.get(selectedId)?.icon : undefined}
+              selectedZone={selectedZone}
+              onSelectZone={pickZone}
+              nodes={displayNodes}
+              materialIcon={materialIcon}
+              categoryIcons={CATEGORY_ICONS}
             />
           )}
-          {!selectedId && (
+          {!selectedId && !selectedZone && (
             <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg border border-white/10 bg-[#0d0d14]/90 px-3 py-1.5 text-xs text-white/60 shadow-lg backdrop-blur">
-              Select a material to highlight its zones
+              Select a material, or click a map to see its gathering nodes
             </div>
           )}
-          {selectedId != null && selectedNodes.length > 0 && (
+          {displayNodes.length > 0 && (
             <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg border border-amber-400/25 bg-[#0d0d14]/90 px-3 py-1.5 text-xs text-amber-200/80 shadow-lg backdrop-blur">
-              {selectedNodes.length} exact node spots pinned · zoom in to use them
+              {displayNodes.length} node spots pinned · zoom in to use them
+            </div>
+          )}
+          {((selectedId != null && selectedNodes.length === 0) ||
+            (selectedZone != null && zoneNodes.length === 0)) && (
+            <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg border border-white/10 bg-[#0d0d14]/90 px-3 py-1.5 text-xs text-white/55 shadow-lg backdrop-blur">
+              No node spots mapped here yet
             </div>
           )}
         </main>
